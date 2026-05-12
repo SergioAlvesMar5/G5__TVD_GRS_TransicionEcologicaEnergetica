@@ -124,6 +124,7 @@ def columnas_prioritarias(df):
     )
     sufijos_energia = (
         "_electricity", "_share_elec", "_production", "_consumption",
+        "_change_pct", "_change_twh",
     )
     cols = [
         c for c in df.columns
@@ -362,10 +363,12 @@ def calcular(df_raw, df_c, stats, variables_info):
     yr_rng = f"year ≥ {YEAR_MIN}" + (f" y ≤ {YEAR_MAX}" if YEAR_MAX else "")
     pasos = [
         {"texto": f"Carga desde URL de GitHub o fichero local <code>owid-energy-data.csv</code>."},
-        {"texto": f"Selección de <strong>{stats['cols_limpio']} variables clave</strong>: mix eléctrico, producción fósil, emisiones, PIB y población."},
-        {"texto": f"Eliminación de <strong class=\'danger\'>{stats['n_sin_iso']:,} filas sin <code>iso_code</code></strong>: regiones agregadas como &ldquo;Europe&rdquo;, &ldquo;World&rdquo;, &ldquo;Asia&rdquo;..."},
+        {"texto": f"Detección dinámica de variables: columnas base más patrones <code>*_electricity</code>, <code>*_share_elec</code>, <code>*_production</code>, <code>*_consumption</code>, <code>*_change_pct</code> y <code>*_change_twh</code>. Resultado: <strong>{len(variables_info)} variables disponibles</strong>."},
+        {"texto": f"Eliminación de <strong class=\'danger\'>{stats['n_sin_iso']:,} filas sin <code>iso_code</code></strong>; se descartan agregados como &ldquo;World&rdquo;, &ldquo;Europe&rdquo;, &ldquo;Asia&rdquo; o &ldquo;ASEAN&rdquo; y se conservan países reales."},
         {"texto": f"Filtro temporal: solo <code>{yr_rng}</code>, eliminando <strong class=\'danger\'>{stats['n_sin_year']:,} registros históricos</strong> con cobertura insuficiente."},
-        {"texto": f"Dataset limpio: <strong class=\'accent\'>{stats['n_limpio']:,} filas × {stats['cols_limpio']} columnas</strong> · {stats['paises']} países reales · {yr0}–{stats['year_max_real']}."},
+        {"texto": f"Selección dinámica para visualización: <strong>{len(paises_viz)} países</strong> con datos completos en cuotas fósil/renovable/nuclear, carbón/petróleo/gas e intensidad de carbono; país KPI: <code>{pais_ref}</code>."},
+        {"texto": f"Construcción de vistas derivadas: mediana global con <strong>{len(paises_tendencia)} países</strong>, ranking renovable con <strong>{len(paises_comp)} países</strong>, hallazgos automáticos y series temporales por país."},
+        {"texto": f"Dataset final: <strong class=\'accent\'>{stats['n_limpio']:,} filas × {stats['cols_limpio']} columnas</strong> · {stats['paises']} países reales · {yr0}–{stats['year_max_real']}."},
     ]
 
     # Tendencia global

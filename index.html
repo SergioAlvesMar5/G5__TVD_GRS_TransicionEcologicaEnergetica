@@ -305,17 +305,78 @@
       margin-top: 12px
     }
 
+    .var-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .var-group {
+      margin-top: 18px
+    }
+
+    .var-group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.1px;
+      text-transform: uppercase
+    }
+
+    .var-group-title span:last-child {
+      color: var(--accent);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px
+    }
+
     .var-chip {
       background: var(--surf2);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 8px 12px
+      padding: 8px 12px;
+      cursor: pointer;
+      min-height: 82px;
+      text-align: left;
+      transition: border-color .16s, background .16s, opacity .16s, transform .16s
+    }
+
+    .var-chip:hover {
+      border-color: #3c4358;
+      transform: translateY(-1px)
+    }
+
+    .var-chip.selected {
+      background: rgba(110, 231, 183, .10);
+      border-color: var(--accent)
+    }
+
+    .var-chip:not(.selected) {
+      opacity: .58
+    }
+
+    .var-chip.selected .vname {
+      color: var(--accent)
+    }
+
+    .var-chip:not(.selected) .vname {
+      color: #9aa3b8
     }
 
     .var-chip .vname {
       font-family: 'DM Mono', monospace;
-      color: var(--accent);
       font-size: 11px
+    }
+
+    .var-chip .vmark {
+      float: right;
+      color: var(--accent);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px
     }
 
     .var-chip .vtype {
@@ -449,6 +510,32 @@
       gap: 16px;
       margin-bottom: 20px;
       flex-wrap: wrap
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .small-btn {
+      background: var(--surf2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 10px;
+      transition: border-color .16s, color .16s, background .16s
+    }
+
+    .small-btn:hover {
+      background: #202638;
+      border-color: var(--accent);
+      color: var(--accent)
     }
 
     .ctrl-label {
@@ -698,7 +785,7 @@
 
   <!-- ── HEADER ── -->
   <header>
-    <div class="eyebrow">TVD · Tema 5 · Defensa Intermedia</div>
+    <div class="eyebrow">TVD · Tema 5</div>
     <h1>Transición <em>Ecológica</em> y Energía</h1>
     <div class="header-sub" id="headerSub"></div>
   </header>
@@ -779,7 +866,13 @@
       </div>
 
       <div class="card">
-        <h3>Variables Seleccionadas (<span id="nVars"></span>)</h3>
+        <h3>Variables Seleccionadas (<span id="nVars"></span> · <span id="nVarsSelected"></span> activas)</h3>
+        <div class="controls" style="margin-top:12px">
+          <button class="small-btn" id="btnVarDefaults">Selección por defecto</button>
+          <button class="small-btn" id="btnVarAll">Seleccionar todas</button>
+          <button class="small-btn" id="btnVarNone">Limpiar</button>
+        </div>
+        <div class="var-summary" id="varSummary"></div>
         <div class="var-grid" id="varGrid"></div>
       </div>
     </div>
@@ -791,7 +884,7 @@
         defensa intermedia presenta la <strong style="color:var(--warn)">Tarea 1</strong>.</p>
 
       <div class="task-card active-task">
-        <div class="task-num">TAREA 1 · PRESENTADA HOY</div>
+        <div class="task-num">TAREA 1 </div>
         <div class="task-title">Descubrir tendencias en la evolución del mix eléctrico por país (<span
             id="periodoT1"></span>)</div>
         <div class="task-body">Identificar cómo ha cambiado la composición proporcional de las fuentes de generación
@@ -958,6 +1051,7 @@
     let D = null;          // datos del dashboard
     let curCountry = null;
     let curView = 'detail';
+    let selectedVars = new Set();
 
     // ── NAV ─────────────────────────────────────────────────────
     function showSection(id, btn) {
@@ -1035,14 +1129,122 @@
     }
 
     // ── RENDER VARIABLES ─────────────────────────────────────────
+    function variableGroup(v) {
+      const n = v.nombre;
+      if (['country', 'year'].includes(n)) return 'Identificación';
+      if (['population', 'gdp'].includes(n)) return 'Contexto socioeconómico';
+      if (n.includes('carbon') || n.includes('emissions')) return 'Emisiones e intensidad';
+      if (n.endsWith('_share_elec') || n.endsWith('_share_energy')) return 'Cuotas del mix';
+      if (n.endsWith('_electricity') || n.includes('electricity')) return 'Generación y demanda eléctrica';
+      if (n.endsWith('_production')) return 'Producción';
+      if (n.endsWith('_consumption')) return 'Consumo';
+      if (n.endsWith('_per_capita') || n.includes('per_capita')) return 'Per cápita';
+      if (n.endsWith('_change_pct') || n.endsWith('_change_twh')) return 'Variaciones';
+      return 'Otras variables';
+    }
+
+    function defaultVariableSelection(variables) {
+      const featured = new Set([
+        'country', 'year', 'population', 'gdp',
+        'primary_energy_consumption', 'energy_per_capita',
+        'electricity_generation', 'electricity_demand', 'per_capita_electricity',
+        'carbon_intensity_elec', 'greenhouse_gas_emissions',
+      ]);
+      const fuentesCambio = [
+        'fossil_cons', 'coal_cons', 'oil_cons', 'gas_cons',
+        'low_carbon_cons', 'nuclear_cons', 'renewables_cons',
+        'other_renewables_cons',
+      ];
+      return new Set(variables
+        .map(v => v.nombre)
+        .filter(n =>
+          featured.has(n) ||
+          n.endsWith('_electricity') ||
+          n.endsWith('_share_elec') ||
+          ['coal_production', 'oil_production', 'gas_production'].includes(n) ||
+          fuentesCambio.some(f => n === `${f}_change_pct` || n === `${f}_change_twh`)
+        ));
+    }
+
+    function saveVariableSelection() {
+      localStorage.setItem('energyDashboard.selectedVars', JSON.stringify([...selectedVars]));
+    }
+
+    function initVariableSelection() {
+      const names = new Set(D.variables.map(v => v.nombre));
+      try {
+        const saved = JSON.parse(localStorage.getItem('energyDashboard.selectedVars') || 'null');
+        if (Array.isArray(saved)) {
+          selectedVars = new Set(saved.filter(n => names.has(n)));
+          if (selectedVars.size) return;
+        }
+      } catch (_) { }
+      selectedVars = defaultVariableSelection(D.variables);
+      saveVariableSelection();
+    }
+
+    function renderVarChip(v) {
+      const selected = selectedVars.has(v.nombre);
+      return `<button class="var-chip ${selected ? 'selected' : ''}" data-var="${v.nombre}" type="button" aria-pressed="${selected}">
+        <span class="vmark">${selected ? 'ON' : 'OFF'}</span>
+        <div class="vname">${v.nombre}</div>
+        <div class="vtype">${v.tipo}</div>
+        <div class="vdesc">${v.descripcion}</div>
+      </button>`;
+    }
+
     function renderVariables() {
+      const groups = d3.group(D.variables, variableGroup);
+      const order = [
+        'Identificación',
+        'Contexto socioeconómico',
+        'Generación y demanda eléctrica',
+        'Cuotas del mix',
+        'Consumo',
+        'Producción',
+        'Per cápita',
+        'Emisiones e intensidad',
+        'Variaciones',
+        'Otras variables',
+      ].filter(g => groups.has(g));
+
       document.getElementById('nVars').textContent = D.variables.length;
-      document.getElementById('varGrid').innerHTML = D.variables.map(v => `
-    <div class="var-chip">
-      <div class="vname">${v.nombre}</div>
-      <div class="vtype">${v.tipo}</div>
-      <div class="vdesc">${v.descripcion}</div>
-    </div>`).join('');
+      document.getElementById('nVarsSelected').textContent = selectedVars.size;
+      document.getElementById('varSummary').innerHTML = order.map(g =>
+        `<div class="tag tag-t">${g}: ${groups.get(g).filter(v => selectedVars.has(v.nombre)).length}/${groups.get(g).length}</div>`
+      ).join('');
+      document.getElementById('varGrid').innerHTML = order.map(g => `
+        <div class="var-group" style="grid-column:1/-1">
+          <div class="var-group-title"><span>${g}</span><span>${groups.get(g).filter(v => selectedVars.has(v.nombre)).length}/${groups.get(g).length}</span></div>
+          <div class="var-grid">${groups.get(g).map(renderVarChip).join('')}</div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.var-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const name = btn.dataset.var;
+          selectedVars.has(name) ? selectedVars.delete(name) : selectedVars.add(name);
+          saveVariableSelection();
+          renderVariables();
+        });
+      });
+    }
+
+    function bindVariableControls() {
+      document.getElementById('btnVarDefaults').addEventListener('click', () => {
+        selectedVars = defaultVariableSelection(D.variables);
+        saveVariableSelection();
+        renderVariables();
+      });
+      document.getElementById('btnVarAll').addEventListener('click', () => {
+        selectedVars = new Set(D.variables.map(v => v.nombre));
+        saveVariableSelection();
+        renderVariables();
+      });
+      document.getElementById('btnVarNone').addEventListener('click', () => {
+        selectedVars = new Set();
+        saveVariableSelection();
+        renderVariables();
+      });
     }
 
     // ── RENDER SELECTOR ──────────────────────────────────────────
@@ -1302,6 +1504,8 @@
     function initDashboard(data) {
       D = data;
       curCountry = D.meta.pais_ref || D.paises_viz[0];
+      initVariableSelection();
+      bindVariableControls();
 
       renderHeader();
       renderKPIs();
