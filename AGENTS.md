@@ -5,11 +5,11 @@ Este repositorio contiene un dashboard estático de visualización de datos sobr
 1. `owid-energy-data.csv` contiene el dataset bruto de Our World in Data.
 2. `preprocesado_energia.py` limpia, filtra y agrega los datos.
 3. `dashboard_data.json` es el contrato de datos generado para el frontend.
-4. `dashboard_energia.html` carga ese JSON con `fetch()` y renderiza el dashboard con D3.
+4. `index.html` carga ese JSON con `fetch()` y renderiza el dashboard con D3.
 
 ## Archivos
 
-- `dashboard_energia.html`: aplicación completa en un solo HTML. Incluye CSS, estructura de secciones, carga de `dashboard_data.json` y funciones D3 de renderizado.
+- `index.html`: aplicación completa en un solo HTML. Incluye CSS, estructura de secciones, carga de `dashboard_data.json` y funciones D3 de renderizado. Es el archivo de entrada para GitHub Pages.
 - `preprocesado_energia.py`: script de preprocesado. Es el sitio preferente para cambiar países, variables, textos de hallazgos, años y métricas.
 - `dashboard_data.json`: salida generada. No conviene editarlo a mano salvo para inspección rápida; se regenera con el script Python.
 - `owid-energy-data.csv`: dataset local bruto, unas 23k filas y 130 columnas.
@@ -28,7 +28,19 @@ También acepta rutas opcionales:
 python preprocesado_energia.py ruta_entrada.csv ruta_salida.json
 ```
 
-Para ver el dashboard, abrir `dashboard_energia.html` con Live Server o servir la carpeta con un servidor estático. Abrir el HTML directamente con `file://` puede fallar por la llamada `fetch('./dashboard_data.json')`.
+Para ver el dashboard en local, abrir `index.html` con Live Server o servir la carpeta con un servidor estático. Abrir el HTML directamente con `file://` puede fallar por la llamada `fetch('./dashboard_data.json')`.
+
+```bash
+python3 -m http.server 8000
+```
+
+Después abrir:
+
+```text
+http://127.0.0.1:8000/
+```
+
+Para verlo en GitHub Pages, configurar Pages con `main` y `/root`. Al existir `index.html` en la raíz, la URL del proyecto debería servir el dashboard directamente.
 
 Dependencias del preprocesado:
 
@@ -80,14 +92,18 @@ Si se añade un país a `PAISES_VIZ`, conviene añadir también su etiqueta en `
 
 ## Frontend
 
-`dashboard_energia.html` tiene estas secciones de navegación:
+`index.html` tiene estas secciones de navegación:
 
 - `ctx`: Contexto y Dataset.
 - `abs`: Abstracción de Tarea.
 - `t1`: Visualización Principal.
+- `t2`: Visualización 2. Contenedor preparado y vacío; su contenido se añadirá posteriormente.
+- `t3`: Visualización 3. Contenedor preparado y vacío; su contenido se añadirá posteriormente.
 - `cod`: Codificación Visual.
 
-Nota: en el `nav` hay dos botones finales con texto `Visualizacion 1` y `Visualizacion 2`, pero ambos apuntan a `showSection('t2', this)`. No existe una sección `id="t2"` en el HTML actual; pulsarlos provocará error porque `document.getElementById('t2')` devuelve `null`.
+La navegación actual está ordenada como: Contexto y Dataset, Abstracción de Tarea, Visualización Principal, Visualización 2, Visualización 3 y Codificación Visual.
+
+Dentro de `cod` hay un selector para elegir la codificación visual de `t1`, `t2` o `t3`. Solo la codificación de la Visualización Principal tiene contenido actualmente; las entradas de Visualización 2 y Visualización 3 están preparadas pero vacías.
 
 Funciones principales del script del HTML:
 
@@ -95,6 +111,7 @@ Funciones principales del script del HTML:
 - `renderHeader`, `renderKPIs`, `renderFicha`, `renderPasos`, `renderVariables`: rellenan textos/tablas.
 - `renderPreprocChart`, `renderCoverageChart`, `renderGlobalTrend`, `renderEurComp`: visualizaciones de contexto.
 - `renderSelector`, `setView`, `renderChart`, `renderCIChart`: visualización principal por país.
+- `setCodViz`: alterna el bloque visible dentro de Codificación Visual.
 - `showSection`: cambio de pestañas.
 
 El gráfico principal usa dos modos:
@@ -124,7 +141,7 @@ KPIs actuales para España 2024:
 
 ## Convenciones y precauciones
 
-- Mantener el contrato entre `preprocesado_energia.py` y `dashboard_energia.html`: si se renombra una clave del JSON, actualizar los renderizadores correspondientes.
+- Mantener el contrato entre `preprocesado_energia.py` e `index.html`: si se renombra una clave del JSON, actualizar los renderizadores correspondientes.
 - Preferir cambios en el script Python para alterar datos, países, textos o métricas. Después regenerar `dashboard_data.json`.
 - El JSON está minificado en una sola línea; para inspeccionarlo usar `python -m json.tool dashboard_data.json`.
 - Evitar editar el CSV bruto salvo que el usuario lo pida explícitamente.
