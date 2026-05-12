@@ -30,135 +30,13 @@ RUTA_SALIDA = Path("dashboard_data.json")       # fichero que consume el dashboa
 YEAR_MIN = 2000    # solo registros con year >= YEAR_MIN
 YEAR_MAX = None    # None = sin límite superior
 
-# ── Variables seleccionadas ─────────────────────────────────────
-# Añadir/quitar tuplas actualiza la tabla de variables y la de nulos.
-# Formato: (nombre_col_csv, tipo_ui, descripción_ui)
-VARIABLES_INFO = [
-    ("country",                    "cat.",             "País o territorio"),
-    ("year",                       "num. (temporal)",  "Año de registro"),
-    ("population",                 "num.",             "Población total"),
-    ("gdp",                        "num. (USD)",       "PIB total"),
-    ("primary_energy_consumption", "num. (TWh)",       "Consumo energía primaria"),
-    ("energy_per_capita",          "num. (kWh/hab)",   "Consumo per cápita"),
-    ("fossil_electricity",         "num. (TWh)",       "Electricidad fósil total"),
-    ("fossil_share_elec",          "num. (%)",         "Cuota fósil en electricidad"),
-    ("coal_electricity",           "num. (TWh)",       "Electricidad de carbón"),
-    ("coal_share_elec",            "num. (%)",         "Cuota carbón"),
-    ("oil_electricity",            "num. (TWh)",       "Electricidad de petróleo"),
-    ("oil_share_elec",             "num. (%)",         "Cuota petróleo"),
-    ("gas_electricity",            "num. (TWh)",       "Electricidad de gas"),
-    ("gas_share_elec",             "num. (%)",         "Cuota gas"),
-    ("low_carbon_electricity",     "num. (TWh)",       "Electricidad bajo carbono"),
-    ("low_carbon_share_elec",      "num. (%)",         "Cuota bajo carbono (nuc+renov)"),
-    ("nuclear_electricity",        "num. (TWh)",       "Electricidad nuclear"),
-    ("nuclear_share_elec",         "num. (%)",         "Cuota nuclear"),
-    ("renewables_electricity",     "num. (TWh)",       "Electricidad renovable"),
-    ("renewables_share_elec",      "num. (%)",         "Cuota renovables"),
-    ("coal_production",            "num. (TWh)",       "Producción de carbón"),
-    ("oil_production",             "num. (TWh)",       "Producción de petróleo"),
-    ("gas_production",             "num. (TWh)",       "Producción de gas"),
-    ("carbon_intensity_elec",      "num. (gCO2/kWh)",  "Intensidad de carbono eléctrica"),
-    ("greenhouse_gas_emissions",   "num. (MtCO2eq)",   "Emisiones GEI electricidad"),
-]
-
-# ── País de referencia para los 4 KPIs del encabezado ──────────
-PAIS_REF       = "Spain"
-PAIS_REF_LABEL = "España"
+# ── Selección dinámica ──────────────────────────────────────────
+# El CSV decide qué variables y países entran; estos valores solo controlan tamaño.
+N_PAISES_VIZ = 20
+N_PAISES_COMPARATIVA = 9
+N_PAISES_TENDENCIA = 20
+PAIS_REF_PREFERIDO = "Spain"
 KPI_YEAR       = 2024         # año "actual" para los KPIs
-
-# ── Países en el selector del gráfico principal ─────────────────
-# Añade o quita entradas; el selector se actualiza automáticamente.
-PAISES_VIZ = [
-    "Spain", "Germany", "France", "United Kingdom", "United States",
-    "China", "India", "Brazil", "Japan", "Portugal", "Italy", "Australia",
-    "Norway", "Sweden", "Canada", "South Korea", "Mexico", "Argentina",
-    "South Africa", "Poland",
-]
-
-# Etiquetas en español para cada país
-PAISES_LABELS = {
-    "Spain":"España","Germany":"Alemania","France":"Francia",
-    "United Kingdom":"Reino Unido","United States":"EE.UU.",
-    "China":"China","India":"India","Brazil":"Brasil","Japan":"Japón",
-    "Portugal":"Portugal","Italy":"Italia","Australia":"Australia",
-    "Norway":"Noruega","Sweden":"Suecia","Canada":"Canadá",
-    "South Korea":"Corea del Sur","Mexico":"México","Argentina":"Argentina",
-    "South Africa":"Sudáfrica","Poland":"Polonia",
-}
-
-# ── Países para la comparativa europea ─────────────────────────
-PAISES_EUROPA = [
-    "Spain","Germany","France","United Kingdom",
-    "Portugal","Poland","Italy","Sweden","Norway",
-]
-
-# ── Países para la tendencia global (medianas por año) ──────────
-PAISES_GLOBALES = [
-    "United States","China","India","Germany","Japan","France",
-    "United Kingdom","Brazil","Canada","Australia","Spain","Italy",
-    "South Korea","Mexico","Russia","Indonesia","Turkey","Poland",
-    "Saudi Arabia","Argentina",
-]
-
-# ── Texto de hallazgo por país (aparece bajo el gráfico principal)
-HALLAZGOS = {
-    "Spain":
-        "España redujo su cuota fósil del 56% (2000) al 23% (2024) mientras las renovables "
-        "escalaban del 16% al 57%. La intensidad de carbono cayó un 69%: de 471 a 146 gCO2/kWh.",
-    "Germany":
-        "Alemania abandonó la nuclear (0% en 2024 tras Fukushima) y amplió las renovables hasta el 59%. "
-        "El carbón cayó del 52% al 21% en 25 años.",
-    "France":
-        "Francia mantiene una matriz ultrabaja en carbono gracias a la nuclear (~68%). "
-        "Con 40 gCO2/kWh en 2024, es una de las electricidades más limpias del mundo.",
-    "United Kingdom":
-        "El RU eliminó casi por completo el carbón (31% a 1%) y alcanzó el 51% de renovables en 2024, "
-        "reduciendo la intensidad de 522 a 217 gCO2/kWh.",
-    "China":
-        "China sigue dominada por el carbón (58% en 2024), aunque las renovables crecen del 17% al 34%. "
-        "La intensidad de 555 gCO2/kWh sigue siendo muy elevada.",
-    "India":
-        "India tiene un mix dominado por el carbón (75%) con escasa variación. "
-        "Su intensidad supera los 700 gCO2/kWh, la mayor de los grandes emisores.",
-    "Poland":
-        "Polonia: 54% de carbón en 2024 frente al 95% de 2000. "
-        "Las renovables pasaron del 2% al 31%. La transición es lenta pero visible.",
-    "Norway":
-        "Noruega genera el 99% con renovables (principalmente hidroeléctrica), "
-        "con ~30 gCO2/kWh, la intensidad más baja del dataset.",
-    "Sweden":
-        "Suecia combina nuclear (~29%) y renovables (~69%), logrando ~35 gCO2/kWh "
-        "sin abandonar el átomo.",
-    "United States":
-        "EE.UU. sustituyó carbón por gas (30% a 43%), con renovables aún en el 24%. "
-        "Intensidad: 608 a 384 gCO2/kWh — transición más lenta que en Europa.",
-    "Brazil":
-        "Brasil parte de una base renovable (89% en 2000 por hidroeléctrica). "
-        "Las variaciones interanuales reflejan la dependencia de la pluviometría.",
-    "Japan":
-        "Tras Fukushima (2011) Japón desconectó toda su nuclear, disparando los fósiles al 88%. "
-        "La lenta reactivación nuclear ha reducido la dependencia desde entonces.",
-    "Portugal":
-        "Portugal alcanzó el 85% de renovables en 2024, cerrando toda generación de carbón. "
-        "Intensidad: 111 gCO2/kWh, referente europeo.",
-    "Italy":
-        "Italia: renovables del 18% al 50%, aunque el gas sigue dominando (47% en 2024).",
-    "Australia":
-        "Australia mantiene una matriz intensiva en carbón (45%), pero las renovables "
-        "crecen del 8% (2000) al 35% (2024).",
-    "Canada":
-        "Canadá combina hidroeléctrica (~40%) y nuclear (~13%). "
-        "Intensidad moderada: 185 gCO2/kWh. El carbón cayó del 19% al 4%.",
-    "South Korea":
-        "Corea del Sur: carbón 30% + gas 28%, renovables marginales (10%). 415 gCO2/kWh.",
-    "Mexico":
-        "México: gas domina (62%), renovables crecen (21%). Intensidad > 480 gCO2/kWh.",
-    "Argentina":
-        "Argentina: 65% gas + 34% renovables. Intensidad ~345 gCO2/kWh.",
-    "South Africa":
-        "Sudáfrica: 83% carbón en 2024, renovables apenas 12%. Intensidad: 717 gCO2/kWh.",
-}
-
 
 # ══════════════════════════════════════════════════════════════════
 # SECCIÓN 2 · LÓGICA DE PROCESADO (no es necesario editar aquí)
@@ -176,6 +54,210 @@ def _clean(obj):
     return _f(obj)
 
 
+def _label_fuente(col):
+    normalizaciones = (
+        ("other_renewables", "otras renovables"),
+        ("other_renewable_exc_biofuel", "otras renovables sin biocombustibles"),
+        ("other_renewable", "otras renovables"),
+        ("low_carbon", "bajo carbono"),
+        ("renewables", "renovables"),
+        ("biofuel", "biocombustibles"),
+        ("fossil_fuel", "combustibles fósiles"),
+        ("fossil", "fósil"),
+        ("hydro", "hidroeléctrica"),
+        ("nuclear", "nuclear"),
+        ("solar", "solar"),
+        ("coal", "carbón"),
+        ("wind", "eólica"),
+        ("oil", "petróleo"),
+        ("gas", "gas"),
+    )
+    for key, label in normalizaciones:
+        if col == key or col.startswith(f"{key}_"):
+            return label
+    return col.split("_", 1)[0].replace("_", " ")
+
+
+def describir_variable(col):
+    especiales = {
+        "country": ("cat.", "País o territorio"),
+        "year": ("num. (temporal)", "Año de registro"),
+        "population": ("num.", "Población total"),
+        "gdp": ("num. (USD)", "PIB total"),
+        "primary_energy_consumption": ("num. (TWh)", "Consumo energía primaria"),
+        "energy_per_capita": ("num. (kWh/hab)", "Consumo per cápita"),
+        "electricity_generation": ("num. (TWh)", "Generación eléctrica total"),
+        "electricity_demand": ("num. (TWh)", "Demanda eléctrica total"),
+        "per_capita_electricity": ("num. (kWh/hab)", "Electricidad per cápita"),
+        "carbon_intensity_elec": ("num. (gCO2/kWh)", "Intensidad de carbono eléctrica"),
+        "greenhouse_gas_emissions": ("num. (MtCO2eq)", "Emisiones GEI electricidad"),
+    }
+    if col in especiales:
+        return col, *especiales[col]
+
+    fuente = _label_fuente(col)
+    if col.endswith("_share_elec"):
+        return col, "num. (%)", f"Cuota {fuente} en electricidad"
+    if col.endswith("_share_energy"):
+        return col, "num. (%)", f"Cuota {fuente} en energía"
+    if col.endswith("_electricity"):
+        return col, "num. (TWh)", f"Electricidad {fuente}"
+    if col.endswith("_production"):
+        return col, "num. (TWh)", f"Producción de {fuente}"
+    if col.endswith("_consumption"):
+        return col, "num. (TWh)", f"Consumo de {fuente}"
+    if col.endswith("_per_capita"):
+        return col, "num. (kWh/hab)", f"{fuente.capitalize()} per cápita"
+    if col.endswith("_change_pct"):
+        return col, "num. (%)", f"Variación porcentual de {fuente}"
+    if col.endswith("_change_twh"):
+        return col, "num. (TWh)", f"Variación absoluta de {fuente}"
+    return col, "num.", col.replace("_", " ")
+
+
+def columnas_prioritarias(df):
+    base = (
+        "country", "year", "population", "gdp",
+        "primary_energy_consumption", "energy_per_capita",
+        "electricity_generation", "electricity_demand", "per_capita_electricity",
+        "carbon_intensity_elec", "greenhouse_gas_emissions",
+    )
+    sufijos_energia = (
+        "_electricity", "_share_elec", "_production", "_consumption",
+    )
+    cols = [
+        c for c in df.columns
+        if c in base or c.endswith(sufijos_energia)
+    ]
+    return [c for c in cols if c != "iso_code"]
+
+
+def variables_disponibles(df):
+    return [describir_variable(c) for c in columnas_prioritarias(df)]
+
+
+def cols_requeridas_viz(df):
+    cols = [
+        "fossil_share_elec",
+        "renewables_share_elec",
+        "nuclear_share_elec",
+        "carbon_intensity_elec",
+        "coal_share_elec",
+        "oil_share_elec",
+        "gas_share_elec",
+    ]
+    return [c for c in cols if c in df.columns]
+
+
+def cols_tecnologias_renovables(df):
+    excluidas = {
+        "fossil_share_elec", "coal_share_elec", "oil_share_elec",
+        "gas_share_elec", "nuclear_share_elec", "renewables_share_elec",
+        "low_carbon_share_elec",
+    }
+    return [
+        c for c in df.columns
+        if c.endswith("_share_elec") and c not in excluidas
+    ]
+
+
+def labels_paises(df):
+    paises = sorted(df["country"].dropna().unique())
+    return {pais: pais for pais in paises}
+
+
+def paises_con_datos_viz(df, n=N_PAISES_VIZ, priorizar_ref=True):
+    requeridas = cols_requeridas_viz(df)
+    if len(requeridas) < 7:
+        return []
+    sub = df.dropna(subset=requeridas)
+    cobertura = sub.groupby("country").agg(
+        n_years=("year", "nunique"),
+        year_max=("year", "max"),
+    ).reset_index()
+    pop = (df.dropna(subset=["population"]).sort_values("year")
+             .groupby("country").tail(1)[["country", "population"]])
+    ranked = (cobertura.merge(pop, on="country", how="left")
+              .fillna({"population": 0})
+              .query("n_years >= 5")
+              .sort_values(["population", "n_years"], ascending=[False, False]))
+    paises = ranked["country"].head(n).tolist()
+    if priorizar_ref and PAIS_REF_PREFERIDO in ranked["country"].values:
+        paises = [p for p in paises if p != PAIS_REF_PREFERIDO]
+        paises.insert(0, PAIS_REF_PREFERIDO)
+        paises = paises[:n]
+    return paises
+
+
+def paises_comparativa(df, candidatos=None, n=N_PAISES_COMPARATIVA):
+    requeridas = cols_requeridas_viz(df)
+    sub = df.dropna(subset=requeridas)
+    if candidatos is not None:
+        sub = sub[sub["country"].isin(candidatos)]
+    candidatos = []
+    for pais, g in sub.groupby("country"):
+        g = g.sort_values("year")
+        if len(g) < 5:
+            continue
+        r0, r1 = g.iloc[0], g.iloc[-1]
+        candidatos.append({
+            "country": pais,
+            "delta_renew": float(r1["renewables_share_elec"] - r0["renewables_share_elec"]),
+        })
+    if not candidatos:
+        return []
+    ranked = pd.DataFrame(candidatos).sort_values("delta_renew", ascending=False)
+    return ranked["country"].head(n).tolist()
+
+
+def _fmt_pct(v):
+    return f"{round(float(v))}%"
+
+
+def _fmt_ci(v):
+    return f"{round(float(v))} gCO2/kWh"
+
+
+def _tendencia(delta):
+    return "subió" if delta >= 0 else "bajó"
+
+
+def generar_hallazgo(pais, rows):
+    if not rows:
+        return ""
+
+    r0, r1 = rows[0], rows[-1]
+    label = pais
+    y0, y1 = r0["year"], r1["year"]
+
+    fossil_delta = r1["fossil"] - r0["fossil"]
+    renew_delta = r1["renewables"] - r0["renewables"]
+    ci_delta = r1["ci"] - r0["ci"]
+    ci_pct = (ci_delta / r0["ci"] * 100) if r0["ci"] else None
+
+    fuentes_finales = {
+        "carbón": r1["coal"],
+        "petróleo": r1["oil"],
+        "gas": r1["gas"],
+        "nuclear": r1["nuclear"],
+        "renovables": r1["renewables"],
+    }
+    fuente_top, valor_top = max(fuentes_finales.items(), key=lambda kv: kv[1])
+
+    partes = [
+        f"{label}: la cuota fósil {_tendencia(fossil_delta)} de {_fmt_pct(r0['fossil'])} ({y0}) "
+        f"a {_fmt_pct(r1['fossil'])} ({y1}), mientras la cuota renovable {_tendencia(renew_delta)} "
+        f"de {_fmt_pct(r0['renewables'])} a {_fmt_pct(r1['renewables'])}.",
+        f"En {y1}, la fuente dominante es {fuente_top} ({_fmt_pct(valor_top)}).",
+    ]
+    if ci_pct is not None:
+        partes.append(
+            f"La intensidad de carbono {_tendencia(ci_delta)} un {abs(round(ci_pct))}%: "
+            f"de {_fmt_ci(r0['ci'])} a {_fmt_ci(r1['ci'])}."
+        )
+    return " ".join(partes)
+
+
 def cargar(ruta=None):
     ruta = Path(ruta) if ruta else RUTA_LOCAL
     if ruta.exists():
@@ -188,11 +270,13 @@ def cargar(ruta=None):
     return df
 
 
-def limpiar(df):
-    cols = ["iso_code"] + [v[0] for v in VARIABLES_INFO if v[0] in df.columns]
+def limpiar(df, variables_info):
+    cols = ["iso_code"] + [v[0] for v in variables_info if v[0] in df.columns]
     df_c = df[[c for c in cols if c in df.columns]].copy()
     n0 = len(df_c)
 
+    # OWID deja iso_code vacío en regiones agregadas (World, Europe, Asia, ASEAN...).
+    # No se usan para detectar países reales ni para alimentar visualizaciones.
     df_c = df_c[df_c["iso_code"].notnull()]
     n_iso = n0 - len(df_c)
 
@@ -218,15 +302,29 @@ def limpiar(df):
     return df_c, stats
 
 
-def calcular(df_raw, df_c, stats):
+def calcular(df_raw, df_c, stats, variables_info):
     yr0, yr1 = stats["year_min_real"], KPI_YEAR
+    paises_labels = labels_paises(df_c)
+    paises_viz = paises_con_datos_viz(df_c)
+    paises_tendencia = paises_con_datos_viz(
+        df_c, n=N_PAISES_TENDENCIA, priorizar_ref=False
+    )
+    paises_comp = paises_comparativa(df_c, candidatos=paises_viz)
+    pais_ref = (
+        PAIS_REF_PREFERIDO if PAIS_REF_PREFERIDO in paises_viz
+        else (paises_viz[0] if paises_viz else PAIS_REF_PREFERIDO)
+    )
+    pais_ref_label = paises_labels.get(pais_ref, pais_ref)
+    cols_main_chart = cols_requeridas_viz(df_c)
+    cols_renovables = cols_tecnologias_renovables(df_c)
+
     m = CTX_META = {
         "nombre_dataset":     "Energy (Our World in Data)",
         "fuente":             "Our World in Data / GitHub",
         "url":                "https://github.com/owid/energy-data",
         "periodo_viz":        f"{yr0}-{stats['year_max_real']}",
         "year_min":           yr0, "year_max": stats["year_max_real"],
-        "pais_ref":           PAIS_REF, "pais_ref_label": PAIS_REF_LABEL,
+        "pais_ref":           pais_ref, "pais_ref_label": pais_ref_label,
         "kpi_year":           yr1,
         "filas_original":     int(df_raw.shape[0]),
         "cols_original":      int(df_raw.shape[1]),
@@ -240,8 +338,8 @@ def calcular(df_raw, df_c, stats):
     }
 
     # KPIs
-    r1 = df_c[(df_c["country"]==PAIS_REF)&(df_c["year"]==yr1)]
-    r0 = df_c[(df_c["country"]==PAIS_REF)&(df_c["year"]==yr0)]
+    r1 = df_c[(df_c["country"]==pais_ref)&(df_c["year"]==yr1)]
+    r0 = df_c[(df_c["country"]==pais_ref)&(df_c["year"]==yr0)]
     def g(row, col, rnd=1):
         if row.empty or col not in row.columns: return None
         v = row[col].iloc[0]
@@ -251,13 +349,13 @@ def calcular(df_raw, df_c, stats):
     ci_pct = round((ci1-ci0)/ci0*100,0) if ci1 and ci0 else None
     kpis = _clean([
         {"valor":f"{fossil:g}" if fossil is not None else "—","unidad":"%",
-         "etiqueta":f"Cuota fósil {PAIS_REF_LABEL} {yr1}","color":"danger"},
+         "etiqueta":f"Cuota fósil {pais_ref_label} {yr1}","color":"danger"},
         {"valor":f"{renew:g}"  if renew  is not None else "—","unidad":"%",
-         "etiqueta":f"Cuota renovables {PAIS_REF_LABEL} {yr1}","color":"accent"},
+         "etiqueta":f"Cuota renovables {pais_ref_label} {yr1}","color":"accent"},
         {"valor":f"{int(ci1):,}" if ci1 is not None else "—","unidad":" gCO₂/kWh",
-         "etiqueta":f"Intensidad carbono {PAIS_REF_LABEL} {yr1}","color":"warn"},
+         "etiqueta":f"Intensidad carbono {pais_ref_label} {yr1}","color":"warn"},
         {"valor":f"{int(ci_pct):+}" if ci_pct is not None else "—","unidad":"%",
-         "etiqueta":f"Variación intensidad {PAIS_REF_LABEL} {yr0}–{yr1}","color":"blue"},
+         "etiqueta":f"Variación intensidad {pais_ref_label} {yr0}–{yr1}","color":"blue"},
     ])
 
     # Pasos de preprocesado (con cifras reales)
@@ -271,7 +369,7 @@ def calcular(df_raw, df_c, stats):
     ]
 
     # Tendencia global
-    df_m = df_c[df_c["country"].isin(PAISES_GLOBALES)]
+    df_m = df_c[df_c["country"].isin(paises_tendencia)]
     tendencia = _clean(df_m.groupby("year").agg(
         med_fossil=("fossil_share_elec","median"),
         med_renew=("renewables_share_elec","median"),
@@ -281,12 +379,12 @@ def calcular(df_raw, df_c, stats):
     ).reset_index().round(2).to_dict(orient="records"))
 
     # Cobertura temporal
-    cobertura = _clean(df_c.groupby("year")
-        .apply(lambda g: int(g["fossil_share_elec"].notnull().sum()))
+    cobertura = _clean(df_c.groupby("year")["fossil_share_elec"]
+        .apply(lambda s: int(s.notnull().sum()))
         .reset_index(name="countries_with_data").to_dict(orient="records"))
 
     # Nulos antes vs después
-    check = [v[0] for v in VARIABLES_INFO
+    check = [v[0] for v in variables_info
              if v[0] in df_raw.columns and v[0] in df_c.columns
              and v[0] not in ("country","year")][:10]
     nulos = [{"variable":v,
@@ -296,16 +394,16 @@ def calcular(df_raw, df_c, stats):
                                df_c[v].isnull().sum()/len(df_c))*100,1)}
              for v in check]
 
-    # Comparativa europea
+    # Comparativa de transición renovable
     comp_eur = []
-    for pais in PAISES_EUROPA:
+    for pais in paises_comp:
         r_yr0 = df_c[(df_c["country"]==pais)&(df_c["year"]==yr0)]
         r_yr1 = df_c[(df_c["country"]==pais)&(df_c["year"]==yr1)]
         if r_yr0.empty or r_yr1.empty: continue
         def gv(row,col):
             v = row[col].iloc[0]; return round(float(v),1) if pd.notnull(v) else None
         comp_eur.append(_clean({
-            "country":pais, "label":PAISES_LABELS.get(pais,pais),
+            "country":pais, "label":paises_labels.get(pais,pais),
             "renew_yr0":gv(r_yr0,"renewables_share_elec"),
             "renew_yr1":gv(r_yr1,"renewables_share_elec"),
             "ci_yr0":   gv(r_yr0,"carbon_intensity_elec"),
@@ -315,10 +413,12 @@ def calcular(df_raw, df_c, stats):
 
     # Datos visualización principal
     viz = {}
-    for pais in PAISES_VIZ:
-        sub = df_c[df_c["country"]==pais].dropna(
-            subset=["fossil_share_elec","renewables_share_elec","nuclear_share_elec"])
+    hallazgos = {}
+    paises_viz_validos = []
+    for pais in paises_viz:
+        sub = df_c[df_c["country"]==pais].dropna(subset=cols_main_chart)
         if sub.empty: continue
+        paises_viz_validos.append(pais)
         rows = []
         for _, row in sub.iterrows():
             def gv2(col,rnd=2):
@@ -331,10 +431,11 @@ def calcular(df_raw, df_c, stats):
                 "coal":      gv2("coal_share_elec"),
                 "oil":       gv2("oil_share_elec"),
                 "gas":       gv2("gas_share_elec"),
-                "ci":        round(float(row["carbon_intensity_elec"]),1)
-                             if pd.notnull(row.get("carbon_intensity_elec")) else None,
+                **{c.replace("_share_elec", ""): gv2(c) for c in cols_renovables},
+                "ci":        round(float(row["carbon_intensity_elec"]),1),
             }))
         viz[pais] = rows
+        hallazgos[pais] = generar_hallazgo(pais, rows)
 
     return {
         "meta":                m,
@@ -345,10 +446,10 @@ def calcular(df_raw, df_c, stats):
         "nulos_variables":     nulos,
         "comparativa_europea": comp_eur,
         "variables":           [{"nombre":v[0],"tipo":v[1],"descripcion":v[2]}
-                                 for v in VARIABLES_INFO],
-        "paises_viz":          PAISES_VIZ,
-        "paises_labels":       PAISES_LABELS,
-        "hallazgos":           HALLAZGOS,
+                                 for v in variables_info],
+        "paises_viz":          paises_viz_validos,
+        "paises_labels":       paises_labels,
+        "hallazgos":           hallazgos,
         "datos_viz":           viz,
     }
 
@@ -361,10 +462,12 @@ def main(ruta_csv=None, ruta_json=None):
     ruta_json = Path(ruta_json) if ruta_json else RUTA_SALIDA
     print("\n[1/3] Cargando dataset...")
     df_raw = cargar(ruta_csv)
+    variables_info = variables_disponibles(df_raw)
+    print(f"  {len(variables_info)} variables priorizadas disponibles")
     print("[2/3] Limpiando y filtrando...")
-    df_c, stats = limpiar(df_raw)
+    df_c, stats = limpiar(df_raw, variables_info)
     print("[3/3] Calculando métricas...")
-    data = calcular(df_raw, df_c, stats)
+    data = calcular(df_raw, df_c, stats, variables_info)
     with open(ruta_json,"w",encoding="utf-8") as f:
         json.dump(data, f, separators=(",",":"), ensure_ascii=False)
     print(f"\n✓ Generado: {ruta_json}  ({ruta_json.stat().st_size/1024:.0f} kB)")

@@ -764,16 +764,16 @@
       </div>
 
       <div class="card" style="margin-top:20px">
-        <h3>Tendencia Global — Mediana de Cuotas en Grandes Economías (<span id="periodoTrend"></span>)</h3>
+        <h3>Tendencia Global — Mediana de Cuotas en Países con Mayor Población (<span id="periodoTrend"></span>)</h3>
         <p style="margin-bottom:16px">Mediana de la cuota de generación eléctrica de fósiles, renovables y nuclear en
-          las 20 mayores economías globales, como contexto del fenómeno a escala mundial.</p>
+          los países con mayor población y cobertura suficiente, como contexto del fenómeno a escala mundial.</p>
         <svg id="globalTrendChart"></svg>
         <div class="legend" id="globalTrendLegend"></div>
       </div>
 
       <div class="card">
-        <h3>Comparativa Europea — Renovables <span id="yrEur0"></span> vs <span id="yrEur1"></span></h3>
-        <p style="margin-bottom:16px">Cuota de generación renovable en países europeos seleccionados. El delta (+)
+        <h3>Comparativa — Renovables <span id="yrEur0"></span> vs <span id="yrEur1"></span></h3>
+        <p style="margin-bottom:16px">Cuota de generación renovable en países seleccionados dinámicamente. El delta (+)
           indica la ganancia acumulada en puntos porcentuales.</p>
         <svg id="eurCompChart"></svg>
       </div>
@@ -811,9 +811,9 @@
       </div>
       <div class="task-card">
         <div class="task-num">TAREA 3</div>
-        <div class="task-title">Comparar la velocidad de transición renovable entre países europeos</div>
-        <div class="task-body">Comparar la tasa de cambio acumulada en la cuota de renovables entre los países europeos
-          configurados, identificando líderes y rezagados de la transición.</div>
+        <div class="task-title">Comparar la velocidad de transición renovable entre países seleccionados</div>
+        <div class="task-body">Comparar la tasa de cambio acumulada en la cuota de renovables entre países con cobertura
+          suficiente, identificando líderes y rezagados de la transición.</div>
         <span class="tag tag-a">COMPARE</span><span class="tag tag-a">RANK</span>
         <span class="tag tag-t">renewables_share_elec · delta <span id="periodoT3"></span></span>
       </div>
@@ -1170,7 +1170,7 @@
         }).on('mouseout', hideTT);
     }
 
-    // ── CTX CHART 5: comparativa europea ────────────────────────
+    // ── CTX CHART 5: comparativa renovable ──────────────────────
     function renderEurComp() {
       const data = D.comparativa_europea;
       if (!data?.length) return;
