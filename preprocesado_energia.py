@@ -368,7 +368,7 @@ def main(ruta_csv=None, ruta_json=None):
     with open(ruta_json,"w",encoding="utf-8") as f:
         json.dump(data, f, separators=(",",":"), ensure_ascii=False)
     print(f"\n✓ Generado: {ruta_json}  ({ruta_json.stat().st_size/1024:.0f} kB)")
-    print("  Abre dashboard_energia.html con Live Server para ver los cambios.")
+    print("  Abre index.html con Live Server para ver los cambios.")
 
 
 if __name__ == "__main__":
