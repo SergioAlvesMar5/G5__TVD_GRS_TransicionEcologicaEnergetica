@@ -709,9 +709,9 @@
     <button class="nav-btn active" onclick="showSection('ctx',this)">Contexto &amp; Dataset</button>
     <button class="nav-btn" onclick="showSection('abs',this)">Abstracción de Tarea</button>
     <button class="nav-btn" onclick="showSection('t1',this)">Visualización Principal</button>
+    <button class="nav-btn" onclick="showSection('t2',this)">Visualización 2</button>
+    <button class="nav-btn" onclick="showSection('t3',this)">Visualización 3</button>
     <button class="nav-btn" onclick="showSection('cod',this)">Codificación Visual</button>
-    <button class="nav-btn" onclick="showSection('t2',this)">Visualizacion 1</button>
-    <button class="nav-btn" onclick="showSection('t2',this)">Visualizacion 2</button>
 
   </nav>
 
@@ -847,75 +847,98 @@
       </div>
     </div>
 
+    <!-- ════════════════ VISUALIZACIÓN 2 ════════════════ -->
+    <div id="t2" class="section"></div>
+
+    <!-- ════════════════ VISUALIZACIÓN 3 ════════════════ -->
+    <div id="t3" class="section"></div>
+
     <!-- ════════════════ CODIFICACIÓN ════════════════ -->
     <div id="cod" class="section">
       <h2>Codificación Visual</h2>
-      <p style="margin-bottom:24px">Justificación perceptual de los canales visuales de la visualización principal
-        (Tarea 1).</p>
-      <div class="card">
-        <h3>Tipo de gráfico — Área Apilada (Stacked Area)</h3>
-        <p>El gráfico de área apilada es la codificación óptima para representar composición proporcional que evoluciona
-          en el tiempo. La suma de áreas en cada año equivale al 100% del mix, haciendo visualmente obvio cuándo una
-          fuente crece a costa de otra. A diferencia de líneas múltiples, permite percibir simultáneamente el todo y sus
-          partes a lo largo del tiempo.</p>
+      <div class="chart-controls">
+        <span class="ctrl-label">Visualización:</span>
+        <select id="codVizSelect" onchange="setCodViz(this.value)">
+          <option value="t1">Visualización Principal</option>
+          <option value="t2">Visualización 2</option>
+          <option value="t3">Visualización 3</option>
+        </select>
       </div>
-      <table class="cod-table">
-        <thead>
-          <tr>
-            <th>Canal visual</th>
-            <th>Variable mapeada</th>
-            <th>Justificación perceptual</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Posición X</td>
-            <td>year (eje temporal)</td>
-            <td>Progresión izq.→der. culturalmente universal para el tiempo. Mayor precisión perceptual que cualquier
-              otro canal para ordenar datos secuenciales.</td>
-          </tr>
-          <tr>
-            <td>Posición Y (altura banda)</td>
-            <td>% cuota de cada fuente</td>
-            <td>Posición sobre eje común: canal cuantitativo más preciso según Cleveland-McGill. La altura de cada banda
-              codifica la cuota proporcional directamente.</td>
-          </tr>
-          <tr>
-            <td>Color (matiz)</td>
-            <td>Fuente de generación</td>
-            <td>Canal categórico más efectivo para grupos nominales. Paleta semántica: grises/azules para fósiles,
-              naranja para nuclear, verde para renovables. Refuerza la semántica de limpio vs. sucio.</td>
-          </tr>
-          <tr>
-            <td>Área acumulada</td>
-            <td>Composición 100%</td>
-            <td>El apilado garantiza que la suma sea siempre 100%, haciendo la composición del mix legible sin cálculos
-              adicionales del usuario.</td>
-          </tr>
-          <tr>
-            <td>Línea panel inferior</td>
-            <td>carbon_intensity_elec</td>
-            <td>Vincula el cambio de mix con su impacto real en emisiones. Valida que el desplazamiento del área fósil
-              se traduce en descarbonización efectiva, no en artefacto estadístico.</td>
-          </tr>
-          <tr>
-            <td>Tooltip interactivo</td>
-            <td>Todos los valores anuales</td>
-            <td>Reduce el clutter visual: el usuario accede al valor preciso solo cuando lo necesita, sin sobrecargar el
-              gráfico con anotaciones estáticas.</td>
-          </tr>
-          <tr>
-            <td>Selector de país</td>
-            <td>country (cat.)</td>
-            <td>Permite explorar la misma tarea en distintos contextos nacionales sin multiplicar paneles estáticos,
-              evidenciando la heterogeneidad de las trayectorias.</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="card" style="margin-top:20px">
-        <h3>¿Por qué esta visualización constituye un hallazgo?</h3>
-        <p id="findingCod"></p>
+      <div id="codT1">
+        <p style="margin-bottom:24px">Justificación perceptual de los canales visuales de la visualización principal
+          (Tarea 1).</p>
+        <div class="card">
+          <h3>Tipo de gráfico — Área Apilada (Stacked Area)</h3>
+          <p>El gráfico de área apilada es la codificación óptima para representar composición proporcional que
+            evoluciona
+            en el tiempo. La suma de áreas en cada año equivale al 100% del mix, haciendo visualmente obvio cuándo una
+            fuente crece a costa de otra. A diferencia de líneas múltiples, permite percibir simultáneamente el todo y
+            sus
+            partes a lo largo del tiempo.</p>
+        </div>
+        <table class="cod-table">
+          <thead>
+            <tr>
+              <th>Canal visual</th>
+              <th>Variable mapeada</th>
+              <th>Justificación perceptual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Posición X</td>
+              <td>year (eje temporal)</td>
+              <td>Progresión izq.→der. culturalmente universal para el tiempo. Mayor precisión perceptual que cualquier
+                otro canal para ordenar datos secuenciales.</td>
+            </tr>
+            <tr>
+              <td>Posición Y (altura banda)</td>
+              <td>% cuota de cada fuente</td>
+              <td>Posición sobre eje común: canal cuantitativo más preciso según Cleveland-McGill. La altura de cada
+                banda
+                codifica la cuota proporcional directamente.</td>
+            </tr>
+            <tr>
+              <td>Color (matiz)</td>
+              <td>Fuente de generación</td>
+              <td>Canal categórico más efectivo para grupos nominales. Paleta semántica: grises/azules para fósiles,
+                naranja para nuclear, verde para renovables. Refuerza la semántica de limpio vs. sucio.</td>
+            </tr>
+            <tr>
+              <td>Área acumulada</td>
+              <td>Composición 100%</td>
+              <td>El apilado garantiza que la suma sea siempre 100%, haciendo la composición del mix legible sin
+                cálculos
+                adicionales del usuario.</td>
+            </tr>
+            <tr>
+              <td>Línea panel inferior</td>
+              <td>carbon_intensity_elec</td>
+              <td>Vincula el cambio de mix con su impacto real en emisiones. Valida que el desplazamiento del área fósil
+                se traduce en descarbonización efectiva, no en artefacto estadístico.</td>
+            </tr>
+            <tr>
+              <td>Tooltip interactivo</td>
+              <td>Todos los valores anuales</td>
+              <td>Reduce el clutter visual: el usuario accede al valor preciso solo cuando lo necesita, sin sobrecargar
+                el
+                gráfico con anotaciones estáticas.</td>
+            </tr>
+            <tr>
+              <td>Selector de país</td>
+              <td>country (cat.)</td>
+              <td>Permite explorar la misma tarea en distintos contextos nacionales sin multiplicar paneles estáticos,
+                evidenciando la heterogeneidad de las trayectorias.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="card" style="margin-top:20px">
+          <h3>¿Por qué esta visualización constituye un hallazgo?</h3>
+          <p id="findingCod"></p>
+        </div>
       </div>
+      <div id="codT2" style="display:none"></div>
+      <div id="codT3" style="display:none"></div>
     </div>
   </main>
 
@@ -943,6 +966,12 @@
       document.getElementById(id).classList.add('active');
       btn.classList.add('active');
       if (id === 't1') requestAnimationFrame(() => renderChart(curCountry, curView));
+    }
+
+    function setCodViz(id) {
+      document.getElementById('codT1').style.display = id === 't1' ? 'block' : 'none';
+      document.getElementById('codT2').style.display = id === 't2' ? 'block' : 'none';
+      document.getElementById('codT3').style.display = id === 't3' ? 'block' : 'none';
     }
 
     // ── TOOLTIP ──────────────────────────────────────────────────
