@@ -88,12 +88,3 @@ Se ha creado un ranking de barras horizontales apiladas:
 - Otro control permite anadir un pais concreto al ranking para compararlo con el top aunque no aparezca entre los primeros.
 
 Esto permite ver no solo quien crece mas, sino tambien **con que tecnologia**: hidro, eolica, solar, bioenergia u otras.
-
-## Codificacion visual
-
-Se han anadido dos bloques nuevos dentro del selector de **Codificacion Visual**:
-
-- `Visualizacion 2`: explica por que se usa dispersion, escala logaritmica, color secuencial, tamano de burbuja y selector temporal.
-- `Visualizacion 3`: explica por que se usa ranking, longitud de barra, marcador inicial, color categorico por tecnologia y controles de comparacion.
-
-Estos apartados siguen la estructura de la visualizacion principal: una tarjeta introductoria y una tabla con canal visual, variable mapeada y justificacion.
