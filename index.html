@@ -610,6 +610,43 @@
       margin-bottom: 20px
     }
 
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px
+    }
+
+    .metric-pill {
+      background: var(--surf2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px
+    }
+
+    .metric-pill .mv {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      line-height: 1
+    }
+
+    .metric-pill .ml {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-top: 4px;
+      text-transform: uppercase
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 12px;
+      max-width: 100%
+    }
+
     .legend {
       display: flex;
       flex-wrap: wrap;
@@ -762,6 +799,30 @@
       z-index: 9998;
       max-width: 230px;
       line-height: 1.5
+    }
+
+    @media(max-width:760px) {
+
+      header,
+      nav,
+      main {
+        padding-left: 20px;
+        padding-right: 20px
+      }
+
+      nav {
+        overflow-x: auto
+      }
+
+      .kpi-strip,
+      .metric-row,
+      .stat-grid {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .chart-wrap {
+        padding: 16px
+      }
     }
   </style>
 </head>
@@ -941,10 +1002,53 @@
     </div>
 
     <!-- ════════════════ VISUALIZACIÓN 2 ════════════════ -->
-    <div id="t2" class="section"></div>
+    <div id="t2" class="section">
+      <h2>Visualización 2 — Economía e Intensidad de Carbono</h2>
+      <div class="chart-controls">
+        <span class="ctrl-label">Año:</span>
+        <select id="scatterYearSelect"></select>
+      </div>
+      <div class="metric-row" id="t2Metrics"></div>
+      <div class="chart-wrap">
+        <div class="chart-title" id="scatterTitle"></div>
+        <div class="chart-sub">Cada círculo es un país · X en escala logarítmica · Tamaño proporcional a población</div>
+        <svg id="scatterChart"></svg>
+        <div class="legend" id="scatterLegend"></div>
+        <p class="note">La escala logarítmica evita que los países de renta muy alta aplasten visualmente al resto y
+          permite comparar mejor órdenes de magnitud.</p>
+      </div>
+      <div class="finding">
+        <div class="finding-lbl">Hallazgo clave</div>
+        <p id="scatterFinding"></p>
+      </div>
+    </div>
 
     <!-- ════════════════ VISUALIZACIÓN 3 ════════════════ -->
-    <div id="t3" class="section"></div>
+    <div id="t3" class="section">
+      <h2>Visualización 3 — Quién Acelera Renovables y Con Qué Tecnología</h2>
+      <div class="chart-controls">
+        <span class="ctrl-label">Top:</span>
+        <select id="transitionLimitSelect"></select>
+        <span class="ctrl-label">Añadir país:</span>
+        <select id="transitionCountrySelect"></select>
+        <button class="small-btn" id="btnAddTransitionCountry" type="button">Añadir</button>
+        <button class="small-btn" id="btnClearTransitionCountries" type="button">Limpiar añadidos</button>
+      </div>
+      <div class="metric-row" id="t3Metrics"></div>
+      <div class="chart-wrap">
+        <div class="chart-title" id="transitionTitle"></div>
+        <div class="chart-sub">Ranking por ganancia de cuota renovable; la barra muestra la composición renovable final
+        </div>
+        <svg id="transitionChart"></svg>
+        <div class="legend" id="transitionLegend"></div>
+        <p class="note">La línea clara dentro de cada fila marca la cuota renovable inicial; la etiqueta final indica el
+          aumento acumulado en puntos porcentuales.</p>
+      </div>
+      <div class="finding">
+        <div class="finding-lbl">Hallazgo clave</div>
+        <p id="transitionFinding"></p>
+      </div>
+    </div>
 
     <!-- ════════════════ CODIFICACIÓN ════════════════ -->
     <div id="cod" class="section">
@@ -1030,8 +1134,117 @@
           <p id="findingCod"></p>
         </div>
       </div>
-      <div id="codT2" style="display:none"></div>
-      <div id="codT3" style="display:none"></div>
+      <div id="codT2" style="display:none">
+        <p style="margin-bottom:24px">Justificación perceptual de los canales visuales de la visualización 2.</p>
+        <div class="card">
+          <h3>Tipo de gráfico — Diagrama de Dispersión con Burbujas</h3>
+          <p>El diagrama de dispersión permite observar si dos variables cuantitativas se relacionan. En este caso,
+            PIB per cápita e intensidad de carbono no forman una tendencia fuerte, y el color revela que la estructura
+            del mix eléctrico explica mejor la limpieza del sistema que la riqueza por sí sola.</p>
+        </div>
+        <table class="cod-table">
+          <thead>
+            <tr>
+              <th>Canal visual</th>
+              <th>Variable mapeada</th>
+              <th>Justificación perceptual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Posición X</td>
+              <td>PIB per cápita</td>
+              <td>La posición sobre eje común es precisa para comparar valores. La escala logarítmica mantiene legibles
+                países con diferencias económicas de varios órdenes de magnitud.</td>
+            </tr>
+            <tr>
+              <td>Posición Y</td>
+              <td>carbon_intensity_elec</td>
+              <td>Permite leer directamente qué sistemas eléctricos son más intensivos en carbono y detectar outliers
+                por encima o por debajo del patrón general.</td>
+            </tr>
+            <tr>
+              <td>Tamaño</td>
+              <td>population</td>
+              <td>La burbuja añade peso demográfico sin desplazar el foco principal del gráfico. Así se distinguen
+                casos sistémicamente grandes de países pequeños.</td>
+            </tr>
+            <tr>
+              <td>Color secuencial</td>
+              <td>Cuota baja en carbono</td>
+              <td>Un gradiente de rojo a verde comunica intuitivamente la transición desde mixes fósiles hacia mixes
+                con más renovables y nuclear.</td>
+            </tr>
+            <tr>
+              <td>Tooltip</td>
+              <td>País, PIB, población, fósiles, renovables, nuclear e intensidad</td>
+              <td>Los valores exactos aparecen bajo demanda para evitar llenar el plano con etiquetas permanentes.</td>
+            </tr>
+            <tr>
+              <td>Selector de año</td>
+              <td>Años con cobertura suficiente</td>
+              <td>Permite comparar el patrón en distintos cortes temporales sin mostrar años con demasiados huecos de
+                PIB, población o intensidad.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="codT3" style="display:none">
+        <p style="margin-bottom:24px">Justificación perceptual de los canales visuales de la visualización 3.</p>
+        <div class="card">
+          <h3>Tipo de gráfico — Ranking de Barras Apiladas con Marcador Inicial</h3>
+          <p>El ranking ordena países por velocidad de transición renovable y, al mismo tiempo, muestra de qué
+            tecnologías procede la cuota renovable final. Esto evita quedarse solo en un delta agregado y permite ver
+            si la transición se basa en hidroeléctrica histórica, eólica, solar o bioenergía.</p>
+        </div>
+        <table class="cod-table">
+          <thead>
+            <tr>
+              <th>Canal visual</th>
+              <th>Variable mapeada</th>
+              <th>Justificación perceptual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Orden vertical</td>
+              <td>delta_renew descendente</td>
+              <td>El orden convierte la comparación en una lectura directa de ranking: arriba aparecen los países que
+                más aumentaron su cuota renovable.</td>
+            </tr>
+            <tr>
+              <td>Longitud horizontal</td>
+              <td>renewables_share_elec final</td>
+              <td>La longitud sobre eje común es el canal más preciso para comparar magnitudes porcentuales entre
+                países.</td>
+            </tr>
+            <tr>
+              <td>Marcador vertical</td>
+              <td>Cuota renovable inicial</td>
+              <td>El marcador permite medir visualmente el salto entre punto de partida y situación final sin añadir
+                otra barra completa.</td>
+            </tr>
+            <tr>
+              <td>Color categórico</td>
+              <td>Tecnología renovable</td>
+              <td>Los colores separan hidro, eólica, solar, bioenergía y otras fuentes, mostrando la arquitectura de la
+                transición de cada país.</td>
+            </tr>
+            <tr>
+              <td>Etiqueta textual</td>
+              <td>delta_renew</td>
+              <td>El número de puntos porcentuales resume el cambio acumulado y facilita defender el hallazgo sin
+                obligar al lector a calcularlo.</td>
+            </tr>
+            <tr>
+              <td>Controles de ranking</td>
+              <td>Número de países y países añadidos manualmente</td>
+              <td>El usuario puede ajustar la densidad del ranking y comparar un país concreto contra el top sin
+                alterar el orden base.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </main>
 
@@ -1047,11 +1260,21 @@
     const C_SUMMARY = { fossil: '#fb7185', nuclear: '#fb923c', renewables: '#4ade80' };
     const L_SUMMARY = { fossil: 'Fósiles (C+P+G)', nuclear: 'Nuclear', renewables: 'Renovables' };
     const KPI_COL = { danger: 'var(--danger)', accent: 'var(--accent)', warn: 'var(--warn)', blue: 'var(--blue)' };
+    const C_RENEW_TECH = {
+      hydro: '#60a5fa',
+      wind: '#34d399',
+      solar: '#fbbf24',
+      biofuel: '#a78bfa',
+      other_renewables: '#cbd5e1'
+    };
 
     let D = null;          // datos del dashboard
     let curCountry = null;
     let curView = 'detail';
     let selectedVars = new Set();
+    let scatterYear = null;
+    let transitionLimit = 12;
+    let transitionExtraCountries = new Set();
 
     // ── NAV ─────────────────────────────────────────────────────
     function showSection(id, btn) {
@@ -1060,6 +1283,8 @@
       document.getElementById(id).classList.add('active');
       btn.classList.add('active');
       if (id === 't1') requestAnimationFrame(() => renderChart(curCountry, curView));
+      if (id === 't2') requestAnimationFrame(renderScatterEconomia);
+      if (id === 't3') requestAnimationFrame(renderTransitionRenewables);
     }
 
     function setCodViz(id) {
@@ -1075,6 +1300,16 @@
 
     // ── HELPERS ──────────────────────────────────────────────────
     const svgW = el => Math.max((el.parentElement || document.body).clientWidth - 48, 300);
+    const fmtMoney = v => v >= 1000 ? '$' + d3.format(',.0f')(v) : '$' + d3.format(',.1f')(v);
+    const fmtAxisMoney = v => '$' + d3.format('~s')(v).replace('G', 'B');
+    const fmtPop = v => v >= 1e9 ? (v / 1e9).toFixed(1) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(0) + 'M' : d3.format(',.0f')(v);
+
+    function logTicks(domain, width) {
+      const candidates = width < 620
+        ? [500, 2000, 10000, 50000, 150000]
+        : [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 150000];
+      return candidates.filter(v => v >= domain[0] && v <= domain[1]);
+    }
 
     function axes(g, xS, yS, h, xFmt, yFmt) {
       g.append('g').attr('transform', `translate(0,${h})`)
@@ -1258,6 +1493,55 @@
       });
     }
 
+    function initScatterControls() {
+      const pack = D.scatter_economia_carbono;
+      const years = pack?.years || [];
+      scatterYear = String(pack?.year || (years.length ? years[years.length - 1].year : ''));
+      const select = document.getElementById('scatterYearSelect');
+      select.innerHTML = years.map(y =>
+        `<option value="${y.year}" ${String(y.year) === scatterYear ? 'selected' : ''}>${y.year} · ${y.n_paises} países</option>`
+      ).join('');
+      select.addEventListener('change', () => {
+        scatterYear = select.value;
+        renderScatterEconomia();
+      });
+    }
+
+    function initTransitionControls() {
+      const pack = D.transicion_renovable;
+      const countries = pack?.paises || [];
+      transitionLimit = pack?.default_n || 12;
+      const maxN = countries.length;
+      const limitOptions = [5, 8, 10, 12, 15, 20, 30]
+        .filter((n, i, arr) => n <= maxN && arr.indexOf(n) === i);
+      if (!limitOptions.includes(transitionLimit) && transitionLimit <= maxN) limitOptions.push(transitionLimit);
+      if (!limitOptions.length && maxN) limitOptions.push(maxN);
+      limitOptions.sort((a, b) => a - b);
+      const limitSelect = document.getElementById('transitionLimitSelect');
+      limitSelect.innerHTML = limitOptions.map(n =>
+        `<option value="${n}" ${n === transitionLimit ? 'selected' : ''}>${n} países</option>`
+      ).join('');
+      limitSelect.addEventListener('change', () => {
+        transitionLimit = +limitSelect.value;
+        renderTransitionRenewables();
+      });
+
+      const countrySelect = document.getElementById('transitionCountrySelect');
+      countrySelect.innerHTML = countries
+        .slice()
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .map(d => `<option value="${d.country}">${d.label} · +${d.delta_renew.toFixed(1)} pp</option>`)
+        .join('');
+      document.getElementById('btnAddTransitionCountry').addEventListener('click', () => {
+        if (countrySelect.value) transitionExtraCountries.add(countrySelect.value);
+        renderTransitionRenewables();
+      });
+      document.getElementById('btnClearTransitionCountries').addEventListener('click', () => {
+        transitionExtraCountries = new Set();
+        renderTransitionRenewables();
+      });
+    }
+
     // ── CTX CHART 1: barras efecto preprocesado ──────────────────
     function renderPreprocChart() {
       const m = D.meta;
@@ -1415,6 +1699,185 @@
       });
     }
 
+    // ── VIZ 2: economía vs intensidad de carbono ────────────────
+    function renderScatterEconomia() {
+      const base = D.scatter_economia_carbono;
+      const pack = base?.por_year?.[String(scatterYear || base.year)] || base;
+      const data = pack?.puntos || [];
+      if (!data.length) return;
+
+      document.getElementById('scatterTitle').textContent =
+        `PIB per cápita e intensidad de carbono eléctrica (${pack.year})`;
+      document.getElementById('t2Metrics').innerHTML = [
+        [pack.n_paises, 'Países con datos', 'var(--accent)'],
+        [pack.year, 'Año usado por cobertura', 'var(--blue)'],
+        [pack.corr_gdp_ci?.toFixed(3) ?? 'n/d', 'Corr. PIB-intensidad', 'var(--warn)'],
+        [pack.corr_low_carbon_ci?.toFixed(3) ?? 'n/d', 'Corr. bajo carbono-intensidad', 'var(--accent)'],
+      ].map(([v, l, c]) => `<div class="metric-pill"><div class="mv" style="color:${c}">${v}</div><div class="ml">${l}</div></div>`).join('');
+
+      const el = document.getElementById('scatterChart'), W = svgW(el), H = 430;
+      const mg = { top: 16, right: 28, bottom: 60, left: 72 };
+      const w = W - mg.left - mg.right, h = H - mg.top - mg.bottom;
+      const svg = d3.select('#scatterChart').attr('width', W).attr('height', H);
+      svg.selectAll('*').remove();
+      const g = svg.append('g').attr('transform', `translate(${mg.left},${mg.top})`);
+      const xExtent = d3.extent(data, d => d.gdp_per_capita);
+      const yMax = d3.max(data, d => d.carbon_intensity);
+      const xS = d3.scaleLog().domain([Math.max(300, xExtent[0] * .8), xExtent[1] * 1.25]).range([0, w]).nice();
+      const yS = d3.scaleLinear().domain([0, yMax * 1.08]).range([h, 0]).nice();
+      const rS = d3.scaleSqrt().domain(d3.extent(data, d => d.population)).range([4, 24]);
+      const cS = d3.scaleSequential(d3.interpolateRgb('#fb7185', '#4ade80')).domain([0, 100]);
+      const xTicks = logTicks(xS.domain(), W);
+
+      g.selectAll('.gl-y').data(yS.ticks(6)).join('line').attr('class', 'gl-y')
+        .attr('x1', 0).attr('x2', w).attr('y1', d => yS(d)).attr('y2', d => yS(d)).attr('stroke', '#1c2030');
+      g.selectAll('.gl-x').data(xTicks).join('line').attr('class', 'gl-x')
+        .attr('x1', d => xS(d)).attr('x2', d => xS(d)).attr('y1', 0).attr('y2', h).attr('stroke', '#171b27');
+
+      g.append('g').attr('transform', `translate(0,${h})`)
+        .call(d3.axisBottom(xS).tickValues(xTicks).tickFormat(fmtAxisMoney))
+        .call(a => { a.select('.domain').remove(); a.selectAll('line').attr('stroke', '#252a38'); a.selectAll('text').attr('fill', '#7c84a0').attr('font-size', '11px').attr('dy', '1.2em'); });
+      g.append('g').call(d3.axisLeft(yS).ticks(6).tickFormat(v => v + ' g'))
+        .call(a => { a.select('.domain').remove(); a.selectAll('line').remove(); a.selectAll('text').attr('fill', '#7c84a0').attr('font-size', '11px'); });
+      g.append('text').attr('x', w / 2).attr('y', h + 44).attr('text-anchor', 'middle')
+        .attr('fill', '#7c84a0').attr('font-size', '11px').text('PIB per cápita (USD, escala log)');
+      g.append('text').attr('transform', 'rotate(-90)').attr('x', -h / 2).attr('y', -52).attr('text-anchor', 'middle')
+        .attr('fill', '#7c84a0').attr('font-size', '11px').text('Intensidad de carbono eléctrica (gCO₂/kWh)');
+
+      const highlight = new Set(['Spain', 'India', 'China', 'United States', 'Brazil', 'France', 'Norway', 'Saudi Arabia', 'South Africa']);
+      g.selectAll('circle').data(data).join('circle')
+        .attr('cx', d => xS(d.gdp_per_capita))
+        .attr('cy', d => yS(d.carbon_intensity))
+        .attr('r', d => rS(d.population))
+        .attr('fill', d => cS(d.low_carbon_share))
+        .attr('fill-opacity', .72)
+        .attr('stroke', '#0d0f14')
+        .attr('stroke-width', 1)
+        .on('mouseover', function (ev, d) {
+          d3.select(this).attr('stroke', '#ffffff').attr('stroke-width', 1.6);
+          showTT(`<strong>${d.label}</strong><br>` +
+            `PIB pc: <strong>${fmtMoney(d.gdp_per_capita)}</strong><br>` +
+            `Intensidad: <strong>${d.carbon_intensity} gCO₂/kWh</strong><br>` +
+            `Población: ${fmtPop(d.population)}<br>` +
+            `Bajo carbono: ${d.low_carbon_share}%<br>` +
+            `Fósil: ${d.fossil_share}%`, ev);
+        })
+        .on('mousemove', ev => showTT(TT.html(), ev))
+        .on('mouseout', function () {
+          d3.select(this).attr('stroke', '#0d0f14').attr('stroke-width', 1);
+          hideTT();
+        });
+
+      g.selectAll('.scatter-label').data(data.filter(d => highlight.has(d.country))).join('text')
+        .attr('class', 'scatter-label')
+        .attr('x', d => xS(d.gdp_per_capita) + rS(d.population) + 4)
+        .attr('y', d => yS(d.carbon_intensity) + 4)
+        .attr('fill', '#d7dce8')
+        .attr('font-size', '10px')
+        .text(d => d.label);
+
+      document.getElementById('scatterLegend').innerHTML = [
+        `<div class="legend-item"><div class="swatch" style="background:#fb7185"></div>Menor cuota baja en carbono</div>`,
+        `<div class="legend-item"><div class="swatch" style="background:#4ade80"></div>Mayor cuota baja en carbono</div>`,
+        `<div class="legend-item">Tamaño: población</div>`,
+      ].join('');
+      document.getElementById('scatterFinding').textContent =
+        `En ${pack.year}, el PIB per cápita apenas se relaciona con la intensidad de carbono ` +
+        `(correlación ${pack.corr_gdp_ci}). En cambio, la cuota baja en carbono sí aparece fuertemente asociada a menor intensidad ` +
+        `(correlación ${pack.corr_low_carbon_ci}), por eso países ricos pueden seguir siendo intensivos si su mix es fósil.`;
+    }
+
+    // ── VIZ 3: ranking y composición renovable ──────────────────
+    function renderTransitionRenewables() {
+      const pack = D.transicion_renovable;
+      const allData = pack?.paises || [];
+      if (!allData.length) return;
+      const topData = allData.slice(0, transitionLimit);
+      const topCountries = new Set(topData.map(d => d.country));
+      const extraData = allData.filter(d => transitionExtraCountries.has(d.country) && !topCountries.has(d.country));
+      const data = topData.concat(extraData);
+
+      const top = allData[0];
+      const avgDelta = d3.mean(topData, d => d.delta_renew);
+      document.getElementById('transitionTitle').textContent =
+        `Mayor aumento de renovables (${pack.year0}–${pack.year1})`;
+      document.getElementById('t3Metrics').innerHTML = [
+        [data.length, 'Países mostrados', 'var(--accent)'],
+        [`+${top.delta_renew.toFixed(1)}`, `Mayor subida: ${top.label}`, 'var(--warn)'],
+        [`+${avgDelta.toFixed(1)}`, 'Subida media del top', 'var(--blue)'],
+        [`${allData.length}`, 'Países comparables', 'var(--accent)'],
+      ].map(([v, l, c]) => `<div class="metric-pill"><div class="mv" style="color:${c}">${v}</div><div class="ml">${l}</div></div>`).join('');
+
+      const el = document.getElementById('transitionChart'), W = svgW(el), H = 90 + data.length * 34;
+      const mg = { top: 12, right: 112, bottom: 36, left: 118 };
+      const w = W - mg.left - mg.right, h = H - mg.top - mg.bottom;
+      const svg = d3.select('#transitionChart').attr('width', W).attr('height', H);
+      svg.selectAll('*').remove();
+      const g = svg.append('g').attr('transform', `translate(${mg.left},${mg.top})`);
+      const xS = d3.scaleLinear().domain([0, 100]).range([0, w]);
+      const yS = d3.scaleBand().domain(data.map(d => d.country)).range([0, h]).padding(.3);
+
+      g.selectAll('.gl').data(xS.ticks(5)).join('line').attr('class', 'gl')
+        .attr('x1', d => xS(d)).attr('x2', d => xS(d)).attr('y1', 0).attr('y2', h).attr('stroke', '#1c2030');
+      g.selectAll('.track').data(data).join('rect')
+        .attr('class', 'track')
+        .attr('x', 0).attr('y', d => yS(d.country))
+        .attr('width', xS(100)).attr('height', yS.bandwidth())
+        .attr('fill', '#1c2030').attr('rx', 4);
+
+      data.forEach(d => {
+        let x0 = 0;
+        pack.tecnologias.forEach(t => {
+          const val = d.componentes[t.key] || 0;
+          if (val <= 0) return;
+          g.append('rect')
+            .attr('x', xS(x0))
+            .attr('y', yS(d.country))
+            .attr('width', Math.max(xS(x0 + val) - xS(x0), 1))
+            .attr('height', yS.bandwidth())
+            .attr('fill', C_RENEW_TECH[t.key] || '#cbd5e1')
+            .attr('rx', 3)
+            .on('mouseover', ev => showTT(`<strong>${d.label}</strong><br>${t.label}: <strong>${val.toFixed(1)}%</strong><br>` +
+              `Renovables ${d.year0}: ${d.renew_yr0}%<br>Renovables ${d.year1}: ${d.renew_yr1}%<br>` +
+              `Intensidad: ${d.ci_yr0} → ${d.ci_yr1} gCO₂/kWh`, ev))
+            .on('mousemove', ev => showTT(TT.html(), ev)).on('mouseout', hideTT);
+          x0 += val;
+        });
+        g.append('line')
+          .attr('x1', xS(d.renew_yr0)).attr('x2', xS(d.renew_yr0))
+          .attr('y1', yS(d.country) - 4).attr('y2', yS(d.country) + yS.bandwidth() + 4)
+          .attr('stroke', '#ffffff').attr('stroke-width', 1.4).attr('opacity', .82);
+        g.append('text')
+          .attr('x', xS(Math.min(d.renew_yr1, 100)) + 8)
+          .attr('y', yS(d.country) + yS.bandwidth() / 2 + 4)
+          .attr('fill', '#4ade80')
+          .attr('font-size', '11px')
+          .attr('font-family', "'DM Mono', monospace")
+          .text(`+${d.delta_renew.toFixed(1)} pp`);
+      });
+
+      g.append('g').call(d3.axisLeft(yS).tickFormat(c => data.find(d => d.country === c)?.label || c).tickSize(0))
+        .call(a => {
+          a.select('.domain').remove();
+          a.selectAll('text')
+            .attr('fill', d => topCountries.has(d) ? '#d7dce8' : '#60a5fa')
+            .attr('font-size', '11px');
+        });
+      g.append('g').attr('transform', `translate(0,${h})`)
+        .call(d3.axisBottom(xS).ticks(5).tickFormat(v => v + '%'))
+        .call(a => { a.select('.domain').remove(); a.selectAll('line').attr('stroke', '#252a38'); a.selectAll('text').attr('fill', '#7c84a0').attr('font-size', '11px'); });
+
+      document.getElementById('transitionLegend').innerHTML = pack.tecnologias.map(t =>
+        `<div class="legend-item"><div class="swatch" style="background:${C_RENEW_TECH[t.key] || '#cbd5e1'}"></div>${t.label}</div>`
+      ).join('') + `<div class="legend-item"><div class="swatch" style="background:#ffffff"></div>Cuota inicial</div>` +
+        (extraData.length ? `<div class="legend-item"><div class="swatch" style="background:#60a5fa"></div>País añadido</div>` : '');
+      document.getElementById('transitionFinding').textContent =
+        `${top.label} lidera el ranking con una subida de ${top.delta_renew.toFixed(1)} puntos porcentuales. ` +
+        `Ahora se muestran ${transitionLimit} países del top` +
+        `${extraData.length ? ` y ${extraData.length} país(es) añadidos manualmente` : ''}. ` +
+        `El desglose muestra que las transiciones no son homogéneas: algunos países crecen apoyados en hidroeléctrica, mientras otros avanzan por eólica, solar o bioenergía.`;
+    }
+
     // ── MAIN VIZ ─────────────────────────────────────────────────
     function setView(v) {
       curView = v;
@@ -1506,6 +1969,8 @@
       curCountry = D.meta.pais_ref || D.paises_viz[0];
       initVariableSelection();
       bindVariableControls();
+      initScatterControls();
+      initTransitionControls();
 
       renderHeader();
       renderKPIs();
@@ -1527,6 +1992,20 @@
       // Pre-render main chart (section is hidden, use small delay for layout)
       setTimeout(() => renderChart(curCountry, curView), 80);
     }
+
+    window.addEventListener('resize', () => {
+      if (!D) return;
+      const active = document.querySelector('.section.active')?.id;
+      if (active === 'ctx') {
+        renderPreprocChart();
+        renderCoverageChart();
+        renderGlobalTrend();
+        renderEurComp();
+      }
+      if (active === 't1') renderChart(curCountry, curView);
+      if (active === 't2') renderScatterEconomia();
+      if (active === 't3') renderTransitionRenewables();
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
       fetch('./dashboard_data.json')

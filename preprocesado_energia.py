@@ -35,6 +35,8 @@ YEAR_MAX = None    # None = sin límite superior
 N_PAISES_VIZ = 20
 N_PAISES_COMPARATIVA = 9
 N_PAISES_TENDENCIA = 20
+N_PAISES_TRANSICION = 12
+MIN_PAISES_SCATTER = 150
 PAIS_REF_PREFERIDO = "Spain"
 KPI_YEAR       = 2024         # año "actual" para los KPIs
 
@@ -209,6 +211,156 @@ def paises_comparativa(df, candidatos=None, n=N_PAISES_COMPARATIVA):
         return []
     ranked = pd.DataFrame(candidatos).sort_values("delta_renew", ascending=False)
     return ranked["country"].head(n).tolist()
+
+
+def _corr(x, y):
+    x = pd.Series(x, dtype="float64")
+    y = pd.Series(y, dtype="float64")
+    mask = x.notnull() & y.notnull()
+    if mask.sum() < 3:
+        return None
+    return round(float(x[mask].corr(y[mask])), 3)
+
+
+def calcular_scatter_economia(df, labels):
+    requeridas = [
+        "country", "year", "population", "gdp", "carbon_intensity_elec",
+        "renewables_share_elec", "nuclear_share_elec", "fossil_share_elec",
+    ]
+    if any(c not in df.columns for c in requeridas):
+        return {"year": None, "years": [], "por_year": {}, "n_paises": 0, "corr_gdp_ci": None, "corr_low_carbon_ci": None, "puntos": []}
+
+    sub = df[requeridas].copy()
+    sub["gdp_per_capita"] = sub["gdp"] / sub["population"]
+    sub = sub.dropna(subset=["gdp_per_capita", "population", "carbon_intensity_elec"])
+    sub = sub[(sub["gdp_per_capita"] > 0) & (sub["population"] > 0)]
+    if sub.empty:
+        return {"year": None, "years": [], "por_year": {}, "n_paises": 0, "corr_gdp_ci": None, "corr_low_carbon_ci": None, "puntos": []}
+
+    cobertura = sub.groupby("year")["country"].nunique()
+    years_ok = cobertura[cobertura >= MIN_PAISES_SCATTER]
+    years = [int(y) for y in (years_ok.index.tolist() if not years_ok.empty else [cobertura.idxmax()])]
+
+    def pack_year(year):
+        year_df = sub[sub["year"] == year].copy()
+        year_df["low_carbon_share"] = year_df["renewables_share_elec"].fillna(0) + year_df["nuclear_share_elec"].fillna(0)
+        year_df["log_gdp_pc"] = np.log10(year_df["gdp_per_capita"])
+        year_df["dominant_group"] = np.select(
+            [
+                year_df["fossil_share_elec"] >= 60,
+                year_df["renewables_share_elec"] >= year_df["nuclear_share_elec"],
+            ],
+            ["Fósil dominante", "Renovable dominante"],
+            default="Nuclear relevante",
+        )
+
+        puntos = []
+        for _, row in year_df.sort_values("population", ascending=False).iterrows():
+            puntos.append(_clean({
+                "country": row["country"],
+                "label": labels.get(row["country"], row["country"]),
+                "year": int(row["year"]),
+                "gdp_per_capita": round(float(row["gdp_per_capita"]), 1),
+                "population": int(row["population"]),
+                "carbon_intensity": round(float(row["carbon_intensity_elec"]), 1),
+                "renewables_share": round(float(row["renewables_share_elec"]), 1),
+                "nuclear_share": round(float(row["nuclear_share_elec"]), 1),
+                "fossil_share": round(float(row["fossil_share_elec"]), 1),
+                "low_carbon_share": round(float(row["low_carbon_share"]), 1),
+                "dominant_group": row["dominant_group"],
+            }))
+
+        return _clean({
+            "year": int(year),
+            "n_paises": len(puntos),
+            "corr_gdp_ci": _corr(year_df["log_gdp_pc"], year_df["carbon_intensity_elec"]),
+            "corr_low_carbon_ci": _corr(year_df["low_carbon_share"], year_df["carbon_intensity_elec"]),
+            "puntos": puntos,
+        })
+
+    default_year = max(years)
+    por_year = {str(y): pack_year(y) for y in years}
+    years_meta = [
+        {
+            "year": y,
+            "n_paises": por_year[str(y)]["n_paises"],
+            "corr_gdp_ci": por_year[str(y)]["corr_gdp_ci"],
+            "corr_low_carbon_ci": por_year[str(y)]["corr_low_carbon_ci"],
+        }
+        for y in years
+    ]
+    return _clean({
+        **por_year[str(default_year)],
+        "years": years_meta,
+        "por_year": por_year,
+    })
+
+
+def calcular_transicion_renovable(df, labels, cols_renovables, year0=None, year1=KPI_YEAR, n=N_PAISES_TRANSICION):
+    requeridas = ["country", "year", "renewables_share_elec", "carbon_intensity_elec"]
+    if any(c not in df.columns for c in requeridas):
+        return {"year0": None, "year1": None, "tecnologias": [], "paises": []}
+
+    tech_labels = {
+        "hydro": "Hidro",
+        "wind": "Eólica",
+        "solar": "Solar",
+        "biofuel": "Bioenergía",
+        "other_renewables": "Otras",
+    }
+    tech_order = ["hydro", "wind", "solar", "biofuel"]
+    available = {c.replace("_share_elec", "") for c in cols_renovables}
+    tech_keys = [t for t in tech_order if t in available]
+    if "other_renewables" in available:
+        tech_keys.append("other_renewables")
+
+    rows = []
+    year0 = int(year0 if year0 is not None else df["year"].min())
+    for pais, g in df.dropna(subset=requeridas).groupby("country"):
+        g = g.sort_values("year")
+        if len(g) < 5:
+            continue
+        r0_match = g[g["year"] == year0]
+        r1_match = g[g["year"] == year1]
+        if r0_match.empty or r1_match.empty:
+            continue
+        r0, r1 = r0_match.iloc[0], r1_match.iloc[0]
+        delta = float(r1["renewables_share_elec"] - r0["renewables_share_elec"])
+        componentes = {}
+        suma_base = 0.0
+        for t in tech_keys:
+            if t == "other_renewables":
+                continue
+            col = f"{t}_share_elec"
+            val = float(r1[col]) if col in r1.index and pd.notnull(r1[col]) else 0.0
+            componentes[t] = round(val, 1)
+            suma_base += val
+        if "other_renewables" in tech_keys:
+            componentes["other_renewables"] = round(max(float(r1["renewables_share_elec"]) - suma_base, 0), 1)
+        rows.append(_clean({
+            "country": pais,
+            "label": labels.get(pais, pais),
+            "year0": int(r0["year"]),
+            "year1": int(r1["year"]),
+            "renew_yr0": round(float(r0["renewables_share_elec"]), 1),
+            "renew_yr1": round(float(r1["renewables_share_elec"]), 1),
+            "delta_renew": round(delta, 1),
+            "ci_yr0": round(float(r0["carbon_intensity_elec"]), 1),
+            "ci_yr1": round(float(r1["carbon_intensity_elec"]), 1),
+            "delta_ci": round(float(r1["carbon_intensity_elec"] - r0["carbon_intensity_elec"]), 1),
+            "componentes": componentes,
+        }))
+
+    rows = sorted(rows, key=lambda d: d["delta_renew"], reverse=True)
+    tecnologias = [{"key": t, "label": tech_labels.get(t, t)} for t in tech_keys]
+    return _clean({
+        "year0": rows[0]["year0"] if rows else None,
+        "year1": rows[0]["year1"] if rows else None,
+        "default_n": min(n, len(rows)),
+        "n_total": len(rows),
+        "tecnologias": tecnologias,
+        "paises": rows,
+    })
 
 
 def _fmt_pct(v):
@@ -414,6 +566,16 @@ def calcular(df_raw, df_c, stats, variables_info):
             "year0":yr0, "year1":yr1,
         }))
 
+    scatter_economia = calcular_scatter_economia(df_c, paises_labels)
+    transicion_renovable = calcular_transicion_renovable(
+        df_c, paises_labels, cols_renovables, year0=yr0, year1=yr1
+    )
+    pasos[5]["texto"] = (
+        f"Construcción de vistas derivadas: mediana global con <strong>{len(paises_tendencia)} países</strong>, "
+        f"scatter economía-carbono con <strong>{len(scatter_economia.get('years', []))} años seleccionables</strong> "
+        f"y ranking renovable con <strong>{transicion_renovable.get('n_total', 0)} países comparables</strong>."
+    )
+
     # Datos visualización principal
     viz = {}
     hallazgos = {}
@@ -448,6 +610,8 @@ def calcular(df_raw, df_c, stats, variables_info):
         "cobertura_anual":     cobertura,
         "nulos_variables":     nulos,
         "comparativa_europea": comp_eur,
+        "scatter_economia_carbono": scatter_economia,
+        "transicion_renovable": transicion_renovable,
         "variables":           [{"nombre":v[0],"tipo":v[1],"descripcion":v[2]}
                                  for v in variables_info],
         "paises_viz":          paises_viz_validos,
