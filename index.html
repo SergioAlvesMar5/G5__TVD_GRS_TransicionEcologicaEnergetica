@@ -941,35 +941,54 @@
     <!-- ════════════════ ABSTRACCIÓN ════════════════ -->
     <div id="abs" class="section">
       <h2>Abstracción de Tarea</h2>
-      <p style="margin-bottom:24px">Tres tareas abstractas con la terminología de Munzner (acción + objetivo). La
-        defensa intermedia presenta la <strong style="color:var(--warn)">Tarea 1</strong>.</p>
+      <p style="margin-bottom:24px">Tres tareas abstractas con la terminología de Munzner (acción + objetivo). Las tres
+        han sido desarrolladas como visualizaciones interactivas en el dashboard.</p>
 
       <div class="task-card active-task">
-        <div class="task-num">TAREA 1 </div>
+        <div class="task-num">TAREA 1</div>
         <div class="task-title">Descubrir tendencias en la evolución del mix eléctrico por país (<span
             id="periodoT1"></span>)</div>
         <div class="task-body">Identificar cómo ha cambiado la composición proporcional de las fuentes de generación
           eléctrica (carbón, petróleo, gas, nuclear, renovables) a lo largo del tiempo en distintos países. El objetivo
-          es detectar patrones estructurales de transición: qué fuentes declinan, cuáles crecen y a qué ritmo.</div>
+          es detectar patrones estructurales de transición: qué fuentes declinan, cuáles crecen y a qué ritmo.
+          La visualización usa un <strong>gráfico de área apilada al 100 %</strong> donde cada banda representa una fuente
+          y la suma siempre es el total generado. Un panel inferior muestra la <strong>intensidad de carbono eléctrica
+          (gCO₂/kWh)</strong> como línea temporal para vincular el cambio de mix con su impacto real en emisiones.
+          Un selector de país permite explorar la misma tarea en distintos contextos nacionales, y un toggle alterna entre
+          vista desglosada (carbón, petróleo, gas, nuclear, renovables) y vista resumida (fósil vs bajo carbono).</div>
         <span class="tag tag-a">DISCOVER</span><span class="tag tag-a">COMPARE</span>
         <span class="tag tag-t">trends · mix eléctrico</span>
-        <span class="tag tag-t">fossil_share / renewables_share / nuclear_share</span>
+        <span class="tag tag-t">fossil_share / renewables_share / nuclear_share / carbon_intensity_elec</span>
       </div>
-      <div class="task-card">
+      <div class="task-card active-task">
         <div class="task-num">TAREA 2</div>
         <div class="task-title">Correlacionar riqueza económica e intensidad de carbono a nivel global</div>
-        <div class="task-body">Determinar si existe relación estadística entre el PIB per cápita y la intensidad de
-          carbono eléctrica (gCO₂/kWh) en un año concreto, usando la población como tamaño de burbuja.</div>
-        <span class="tag tag-a">DISCOVER</span>
-        <span class="tag tag-t">correlation · gdp vs carbon_intensity_elec</span>
+        <div class="task-body">Determinar si existe relación entre el PIB per cápita y la intensidad de carbono eléctrica
+          (gCO₂/kWh) en un año concreto, y descubrir qué variable explica mejor la limpieza del sistema eléctrico.
+          La visualización usa un <strong>diagrama de dispersión con burbujas</strong>: el eje X codifica el PIB per cápita
+          en escala logarítmica, el eje Y la intensidad de carbono, el tamaño de cada burbuja la población del país y el
+          color (gradiente rojo → verde) la cuota de electricidad baja en carbono (renovables + nuclear).
+          Un selector de año permite navegar entre los <span id="scatterNYears"></span> años con cobertura suficiente de PIB,
+          población e intensidad. El hallazgo principal es que la correlación PIB-intensidad es débil, mientras que la cuota
+          baja en carbono se asocia mucho más claramente con menor intensidad de carbono.</div>
+        <span class="tag tag-a">DISCOVER</span><span class="tag tag-a">CORRELATE</span>
+        <span class="tag tag-t">correlation · gdp_per_capita vs carbon_intensity_elec</span>
+        <span class="tag tag-t">population · low_carbon_share_elec</span>
       </div>
-      <div class="task-card">
+      <div class="task-card active-task">
         <div class="task-num">TAREA 3</div>
-        <div class="task-title">Comparar la velocidad de transición renovable entre países seleccionados</div>
-        <div class="task-body">Comparar la tasa de cambio acumulada en la cuota de renovables entre países con cobertura
-          suficiente, identificando líderes y rezagados de la transición.</div>
+        <div class="task-title">Comparar la velocidad de transición renovable entre países y desglosar por tecnología
+          (<span id="periodoT3"></span>)</div>
+        <div class="task-body">Comparar qué países han aumentado más su cuota de generación renovable en puntos
+          porcentuales y con qué tecnologías lo han logrado (hidro, eólica, solar, bioenergía u otras renovables).
+          La visualización usa un <strong>ranking de barras horizontales apiladas</strong> ordenado por ganancia de cuota
+          renovable (delta_renew). Cada barra muestra la composición renovable final desglosada por tecnología; una línea
+          vertical marca la cuota renovable inicial, y la etiqueta final indica el aumento acumulado en puntos porcentuales.
+          Un selector permite elegir cuántos países del top se muestran, y un control adicional permite añadir países
+          concretos al ranking para compararlos con los líderes aunque no aparezcan entre los primeros.</div>
         <span class="tag tag-a">COMPARE</span><span class="tag tag-a">RANK</span>
-        <span class="tag tag-t">renewables_share_elec · delta <span id="periodoT3"></span></span>
+        <span class="tag tag-t">renewables_share_elec · delta_renew</span>
+        <span class="tag tag-t">hydro / wind / solar / biofuel / other_renewables</span>
       </div>
     </div>
 
@@ -1329,6 +1348,8 @@
       document.getElementById('periodoTrend').textContent = m.periodo_viz;
       document.getElementById('periodoT1').textContent = m.periodo_viz;
       document.getElementById('periodoT3').textContent = `${m.year_min}–${m.kpi_year}`;
+      const scNY = document.getElementById('scatterNYears');
+      if (scNY && D.scatter_economia_carbono) scNY.textContent = D.scatter_economia_carbono.years.length;
     }
 
     // ── RENDER KPIs ──────────────────────────────────────────────
