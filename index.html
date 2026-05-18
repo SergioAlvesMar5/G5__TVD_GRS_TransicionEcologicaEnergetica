@@ -14,13 +14,19 @@
       --bg: #0d0f14;
       --surf: #141720;
       --surf2: #1c2030;
-      --border: #252a38;
+      --surf3: #22283a;
+      --border: #2b3143;
       --text: #e8eaf0;
-      --muted: #7c84a0;
+      --muted: #9aa3b8;
+      --muted2: #c4cad8;
       --accent: #6ee7b7;
       --danger: #fb7185;
       --warn: #fbbf24;
       --blue: #60a5fa;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+      --shadow-soft: 0 10px 28px rgba(0, 0, 0, .18);
+      --radius: 12px;
+      --radius-sm: 8px;
       --coal: #94a3b8;
       --oil: #f59e0b;
       --gas: #818cf8;
@@ -41,7 +47,29 @@
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
-      min-height: 100vh
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 15% -10%, rgba(110, 231, 183, .10), transparent 30%),
+        linear-gradient(180deg, rgba(96, 165, 250, .05), transparent 360px)
+    }
+
+    a {
+      text-underline-offset: 3px
+    }
+
+    svg {
+      display: block;
+      max-width: 100%
     }
 
     /* ── LOADING ── */
@@ -115,9 +143,9 @@
 
     /* ── LAYOUT ── */
     header {
-      background: linear-gradient(135deg, #0d0f14 0%, #0d1f14 100%);
+      background: linear-gradient(135deg, rgba(13, 15, 20, .98) 0%, rgba(13, 31, 20, .98) 100%);
       border-bottom: 1px solid var(--border);
-      padding: 32px 56px 24px
+      padding: clamp(24px, 4vw, 38px) clamp(20px, 5vw, 64px) clamp(20px, 3vw, 28px)
     }
 
     .eyebrow {
@@ -149,7 +177,7 @@
 
     .kpi-strip {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1px;
       background: var(--border);
       border-bottom: 1px solid var(--border)
@@ -157,18 +185,22 @@
 
     .kpi {
       background: var(--surf);
-      padding: 16px 24px;
-      transition: background .2s
+      padding: 18px clamp(16px, 2.5vw, 28px);
+      min-width: 0;
+      overflow: hidden;
+      transition: background .2s, transform .2s
     }
 
     .kpi:hover {
-      background: var(--surf2)
+      background: var(--surf2);
+      transform: translateY(-1px)
     }
 
     .kpi-val {
       font-family: 'DM Serif Display', serif;
       font-size: 28px;
-      line-height: 1
+      line-height: 1;
+      overflow-wrap: anywhere
     }
 
     .kpi-val span {
@@ -181,17 +213,23 @@
       letter-spacing: 1.5px;
       text-transform: uppercase;
       color: var(--muted);
-      margin-top: 4px
+      margin-top: 4px;
+      overflow-wrap: anywhere
     }
 
     nav {
-      background: var(--surf);
+      background: rgba(20, 23, 32, .92);
+      backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      padding: 0 56px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+      padding: 0 clamp(16px, 5vw, 64px);
       display: flex;
       position: sticky;
       top: 0;
-      z-index: 100
+      z-index: 100;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
     }
 
     .nav-btn {
@@ -201,14 +239,16 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 12px;
       font-weight: 500;
-      padding: 14px 20px;
+      padding: 15px clamp(14px, 1.6vw, 22px);
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: color .2s, border-color .2s
+      white-space: nowrap;
+      transition: color .2s, border-color .2s, background .2s
     }
 
     .nav-btn:hover {
-      color: var(--text)
+      color: var(--text);
+      background: rgba(255, 255, 255, .035)
     }
 
     .nav-btn.active {
@@ -217,8 +257,9 @@
     }
 
     main {
-      padding: 40px 56px;
-      max-width: 1300px;
+      padding: clamp(28px, 4vw, 48px) clamp(16px, 5vw, 64px);
+      width: min(100%, 1560px);
+      min-height: 100vh;
       margin: 0 auto
     }
 
@@ -256,16 +297,29 @@
     .card {
       background: var(--surf);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 20px
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      padding: clamp(18px, 2.2vw, 28px);
+      margin-bottom: 22px
     }
 
     .card-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      margin-bottom: 22px;
+      align-items: stretch;
+      width: 100%
+    }
+
+    .card-row .card {
+      margin-bottom: 0;
+      min-width: 0
+    }
+
+    .card-row svg {
+      max-width: 100%;
+      height: auto
     }
 
     @media(max-width:900px) {
@@ -282,7 +336,8 @@
 
     .stat-pill {
       background: var(--surf2);
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
       padding: 12px 16px
     }
 
@@ -337,7 +392,7 @@
     .var-chip {
       background: var(--surf2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       padding: 8px 12px;
       cursor: pointer;
       min-height: 82px;
@@ -346,7 +401,8 @@
     }
 
     .var-chip:hover {
-      border-color: #3c4358;
+      border-color: #4a5268;
+      background: var(--surf3);
       transform: translateY(-1px)
     }
 
@@ -403,7 +459,9 @@
       border-bottom: 1px solid #1a1f2e;
       font-size: 13px;
       color: #9099b0;
-      line-height: 1.6
+      line-height: 1.6;
+      min-width: 0;
+      overflow-wrap: anywhere
     }
 
     .steps li::before {
@@ -442,13 +500,17 @@
       color: var(--accent);
       background: #1c2030;
       padding: 1px 5px;
-      border-radius: 3px
+      border-radius: 3px;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word
     }
 
     .task-card {
       background: var(--surf);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
       padding: 20px 24px;
       margin-bottom: 16px;
       border-left: 3px solid var(--border)
@@ -509,7 +571,12 @@
       align-items: center;
       gap: 16px;
       margin-bottom: 20px;
-      flex-wrap: wrap
+      flex-wrap: wrap;
+      background: rgba(20, 23, 32, .72);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: var(--shadow-soft)
     }
 
     .controls {
@@ -522,20 +589,21 @@
     .small-btn {
       background: var(--surf2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       color: var(--text);
       cursor: pointer;
       font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       font-weight: 600;
       padding: 7px 10px;
-      transition: border-color .16s, color .16s, background .16s
+      transition: border-color .16s, color .16s, background .16s, transform .16s
     }
 
     .small-btn:hover {
-      background: #202638;
+      background: var(--surf3);
       border-color: var(--accent);
-      color: var(--accent)
+      color: var(--accent);
+      transform: translateY(-1px)
     }
 
     .ctrl-label {
@@ -549,25 +617,34 @@
     select {
       background: var(--surf2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       font-size: 13px;
       padding: 8px 12px;
       cursor: pointer;
       outline: none;
-      transition: border-color .2s
+      min-height: 38px;
+      max-width: 100%;
+      transition: border-color .2s, background .2s, box-shadow .2s
     }
 
     select:focus,
     select:hover {
-      border-color: var(--accent)
+      border-color: var(--accent);
+      background: var(--surf3)
+    }
+
+    select:focus-visible,
+    button:focus-visible {
+      outline: 2px solid rgba(110, 231, 183, .70);
+      outline-offset: 2px
     }
 
     .view-toggle {
       display: flex;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       overflow: hidden
     }
 
@@ -583,6 +660,11 @@
       transition: background .2s, color .2s
     }
 
+    .toggle-btn:hover {
+      color: var(--text);
+      background: var(--surf3)
+    }
+
     .toggle-btn.active {
       background: var(--accent);
       color: #0d0f14
@@ -591,9 +673,11 @@
     .chart-wrap {
       background: var(--surf);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      overflow: hidden
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 2.4vw, 30px);
+      overflow: hidden;
+      width: 100%
     }
 
     .chart-title {
@@ -620,7 +704,7 @@
     .metric-pill {
       background: var(--surf2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       padding: 12px 14px
     }
 
@@ -673,7 +757,7 @@
       margin-top: 16px;
       background: var(--surf2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       padding: 16px 20px
     }
 
@@ -690,7 +774,7 @@
       background: #0e1f12;
       border: 1px solid #1e4a28;
       border-left: 3px solid var(--accent);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       padding: 16px 20px;
       margin-top: 16px
     }
@@ -713,7 +797,8 @@
     .cod-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px
+      font-size: 13px;
+      overflow-x: auto
     }
 
     .cod-table th {
@@ -790,7 +875,7 @@
       position: fixed;
       background: #1c2030;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       padding: 10px 14px;
       font-size: 12px;
       pointer-events: none;
@@ -799,6 +884,13 @@
       z-index: 9998;
       max-width: 230px;
       line-height: 1.5
+    }
+
+    @media(max-width:1100px) {
+      .kpi-strip,
+      .metric-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+      }
     }
 
     @media(max-width:760px) {
@@ -814,14 +906,54 @@
         overflow-x: auto
       }
 
-      .kpi-strip,
       .metric-row,
       .stat-grid {
         grid-template-columns: 1fr 1fr
       }
 
+      .kpi-strip {
+        grid-template-columns: 1fr
+      }
+
       .chart-wrap {
         padding: 16px
+      }
+
+      .chart-controls {
+        align-items: stretch;
+        gap: 10px
+      }
+
+      select,
+      .small-btn,
+      .view-toggle {
+        width: 100%
+      }
+
+      .view-toggle .toggle-btn {
+        flex: 1
+      }
+    }
+
+    @media(max-width:520px) {
+      .metric-row,
+      .stat-grid {
+        grid-template-columns: 1fr
+      }
+
+      h1 {
+        font-size: 30px
+      }
+    }
+
+    @media(prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important
       }
     }
   </style>
@@ -890,22 +1022,22 @@
       </div>
 
       <div class="card-row">
-        <div class="card" style="margin-bottom:0">
+        <div class="card">
           <h3>Cadena de Preprocesado</h3>
           <ol class="steps" id="pasosList"></ol>
         </div>
-        <div class="card" style="margin-bottom:0">
+        <div class="card">
           <h3>Efecto del Preprocesado</h3>
           <svg id="preprocChart"></svg>
         </div>
       </div>
 
       <div class="card-row" style="margin-top:20px">
-        <div class="card" style="margin-bottom:0">
+        <div class="card">
           <h3>Cobertura Temporal (países con datos por año)</h3>
           <svg id="coverageChart"></svg>
         </div>
-        <div class="card" style="margin-bottom:0">
+        <div class="card">
           <h3>% Valores Nulos — Antes vs Después del Preprocesado</h3>
           <table class="diff-table" id="nullTable"></table>
         </div>
@@ -927,12 +1059,8 @@
       </div>
 
       <div class="card">
-        <h3>Variables Seleccionadas (<span id="nVars"></span> · <span id="nVarsSelected"></span> activas)</h3>
-        <div class="controls" style="margin-top:12px">
-          <button class="small-btn" id="btnVarDefaults">Selección por defecto</button>
-          <button class="small-btn" id="btnVarAll">Seleccionar todas</button>
-          <button class="small-btn" id="btnVarNone">Limpiar</button>
-        </div>
+        <h3>Variables Utilizadas (<span id="nVars"></span> variables)</h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:16px">Todas las variables seleccionadas están siendo utilizadas en el dashboard.</p>
         <div class="var-summary" id="varSummary"></div>
         <div class="var-grid" id="varGrid"></div>
       </div>
@@ -1427,26 +1555,17 @@
     }
 
     function initVariableSelection() {
-      const names = new Set(D.variables.map(v => v.nombre));
-      try {
-        const saved = JSON.parse(localStorage.getItem('energyDashboard.selectedVars') || 'null');
-        if (Array.isArray(saved)) {
-          selectedVars = new Set(saved.filter(n => names.has(n)));
-          if (selectedVars.size) return;
-        }
-      } catch (_) { }
-      selectedVars = defaultVariableSelection(D.variables);
-      saveVariableSelection();
+      // Todas las variables están siempre seleccionadas
+      selectedVars = new Set(D.variables.map(v => v.nombre));
     }
 
     function renderVarChip(v) {
-      const selected = selectedVars.has(v.nombre);
-      return `<button class="var-chip ${selected ? 'selected' : ''}" data-var="${v.nombre}" type="button" aria-pressed="${selected}">
-        <span class="vmark">${selected ? 'ON' : 'OFF'}</span>
+      return `<div class="var-chip" style="cursor:default; border-color:var(--accent)">
+        <span class="vmark" style="color:var(--accent)">✓</span>
         <div class="vname">${v.nombre}</div>
         <div class="vtype">${v.tipo}</div>
         <div class="vdesc">${v.descripcion}</div>
-      </button>`;
+      </div>`;
     }
 
     function renderVariables() {
@@ -1465,42 +1584,19 @@
       ].filter(g => groups.has(g));
 
       document.getElementById('nVars').textContent = D.variables.length;
-      document.getElementById('nVarsSelected').textContent = selectedVars.size;
       document.getElementById('varSummary').innerHTML = order.map(g =>
-        `<div class="tag tag-t">${g}: ${groups.get(g).filter(v => selectedVars.has(v.nombre)).length}/${groups.get(g).length}</div>`
+        `<div class="tag tag-t">${g}: ${groups.get(g).length}</div>`
       ).join('');
       document.getElementById('varGrid').innerHTML = order.map(g => `
         <div class="var-group" style="grid-column:1/-1">
-          <div class="var-group-title"><span>${g}</span><span>${groups.get(g).filter(v => selectedVars.has(v.nombre)).length}/${groups.get(g).length}</span></div>
+          <div class="var-group-title"><span>${g}</span><span>${groups.get(g).length}</span></div>
           <div class="var-grid">${groups.get(g).map(renderVarChip).join('')}</div>
         </div>
       `).join('');
-      document.querySelectorAll('.var-chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const name = btn.dataset.var;
-          selectedVars.has(name) ? selectedVars.delete(name) : selectedVars.add(name);
-          saveVariableSelection();
-          renderVariables();
-        });
-      });
     }
 
     function bindVariableControls() {
-      document.getElementById('btnVarDefaults').addEventListener('click', () => {
-        selectedVars = defaultVariableSelection(D.variables);
-        saveVariableSelection();
-        renderVariables();
-      });
-      document.getElementById('btnVarAll').addEventListener('click', () => {
-        selectedVars = new Set(D.variables.map(v => v.nombre));
-        saveVariableSelection();
-        renderVariables();
-      });
-      document.getElementById('btnVarNone').addEventListener('click', () => {
-        selectedVars = new Set();
-        saveVariableSelection();
-        renderVariables();
-      });
+      // Controles deshabilitados: todas las variables están siempre activas
     }
 
     // ── RENDER SELECTOR ──────────────────────────────────────────
@@ -1572,7 +1668,7 @@
         { label: `Año < ${m.year_min} (−${(m.n_sin_year / 1000).toFixed(1)}k)`, val: m.n_sin_year, color: '#f59e0b' },
         { label: 'Dataset limpio', val: m.filas_limpias, color: '#4ade80' },
       ];
-      const el = document.getElementById('preprocChart'), W = svgW(el), H = 180;
+      const el = document.getElementById('preprocChart'), W = svgW(el), H = 280;
       const mg = { top: 10, right: 20, bottom: 30, left: 195 };
       const w = W - mg.left - mg.right, h = H - mg.top - mg.bottom;
       const svg = d3.select('#preprocChart').attr('width', W).attr('height', H);

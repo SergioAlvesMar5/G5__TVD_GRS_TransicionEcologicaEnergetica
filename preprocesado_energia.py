@@ -40,6 +40,31 @@ MIN_PAISES_SCATTER = 150
 PAIS_REF_PREFERIDO = "Spain"
 KPI_YEAR       = 2024         # año "actual" para los KPIs
 
+# ── Variables a mostrar en la cadena de preprocesado ────────────
+# Solo estas variables aparecerán en la sección de variables del dashboard
+VARIABLES_A_MOSTRAR = {
+    # Base
+    "country", "year", "population", "gdp",
+    # Consumo energético
+    "primary_energy_consumption", "energy_per_capita",
+    # Electricidad generada (total y por fuente)
+    "electricity_generation",
+    "coal_electricity", "oil_electricity", "gas_electricity", 
+    "nuclear_electricity", "solar_electricity", "wind_electricity", 
+    "hydro_electricity", "biofuel_electricity", "other_renewables_electricity",
+    # Cuotas porcentuales
+    "coal_share_elec", "oil_share_elec", "gas_share_elec",
+    "nuclear_share_elec", "solar_share_elec", "wind_share_elec",
+    "hydro_share_elec", "biofuel_share_elec", "other_renewables_share_elec",
+    "fossil_share_elec", "renewables_share_elec", "low_carbon_share_elec",
+    # Producción
+    "coal_production", "oil_production", "gas_production",
+    # Variación anual
+    "fossil_change_pct", "low_carbon_change_pct",
+    # Emisiones
+    "carbon_intensity_elec", "greenhouse_gas_emissions",
+}
+
 # ══════════════════════════════════════════════════════════════════
 # SECCIÓN 2 · LÓGICA DE PROCESADO (no es necesario editar aquí)
 # ══════════════════════════════════════════════════════════════════
@@ -118,20 +143,8 @@ def describir_variable(col):
 
 
 def columnas_prioritarias(df):
-    base = (
-        "country", "year", "population", "gdp",
-        "primary_energy_consumption", "energy_per_capita",
-        "electricity_generation", "electricity_demand", "per_capita_electricity",
-        "carbon_intensity_elec", "greenhouse_gas_emissions",
-    )
-    sufijos_energia = (
-        "_electricity", "_share_elec", "_production", "_consumption",
-        "_change_pct", "_change_twh",
-    )
-    cols = [
-        c for c in df.columns
-        if c in base or c.endswith(sufijos_energia)
-    ]
+    # Filtra solo las variables definidas en VARIABLES_A_MOSTRAR
+    cols = [c for c in df.columns if c in VARIABLES_A_MOSTRAR]
     return [c for c in cols if c != "iso_code"]
 
 
