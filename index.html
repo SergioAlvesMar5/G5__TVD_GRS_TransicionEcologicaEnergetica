@@ -1032,7 +1032,7 @@
         </div>
       </div>
 
-      <div class="card-row" style="margin-top:20px">
+      <div class="card-row" style="margin-top:20px;align-items:start">
         <div class="card">
           <h3>Cobertura Temporal (países con datos por año)</h3>
           <svg id="coverageChart"></svg>
@@ -1422,6 +1422,7 @@
     let scatterYear = null;
     let transitionLimit = 12;
     let transitionExtraCountries = new Set();
+    let coverageResizeObserver = null;
 
     // ── NAV ─────────────────────────────────────────────────────
     function showSection(id, btn) {
@@ -1456,6 +1457,44 @@
         ? [500, 2000, 10000, 50000, 150000]
         : [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 150000];
       return candidates.filter(v => v >= domain[0] && v <= domain[1]);
+    }
+
+    function calculateTickInterval(width, totalYears) {
+      const labelWidth = 34;
+      const labelGap = 24;
+      const maxTicks = Math.max(2, Math.floor(width / (labelWidth + labelGap)));
+      const rawInterval = Math.ceil(Math.max(1, totalYears - 1) / Math.max(1, maxTicks - 1));
+      if (rawInterval <= 2) return 2;
+      if (rawInterval <= 5) return 5;
+      if (rawInterval <= 10) return 10;
+      return Math.ceil(rawInterval / 5) * 5;
+    }
+
+    function coverageTickValues(data, width) {
+      const years = data.map(d => d.year).sort((a, b) => a - b);
+      const first = years[0], last = years[years.length - 1];
+      const interval = calculateTickInterval(width, years.length);
+      const tickSet = new Set([first, last]);
+      const start = Math.ceil(first / interval) * interval;
+      for (let year = start; year < last; year += interval) {
+        if (year > first) tickSet.add(year);
+      }
+      return Array.from(tickSet).sort((a, b) => a - b);
+    }
+
+    function initCoverageResizeObserver() {
+      const chart = document.getElementById('coverageChart');
+      const target = chart?.parentElement;
+      if (!target || coverageResizeObserver) return;
+      if (!('ResizeObserver' in window)) return;
+      let lastWidth = 0;
+      coverageResizeObserver = new ResizeObserver(entries => {
+        const width = Math.round(entries[0].contentRect.width);
+        if (!D || Math.abs(width - lastWidth) < 2) return;
+        lastWidth = width;
+        requestAnimationFrame(renderCoverageChart);
+      });
+      coverageResizeObserver.observe(target);
     }
 
     function axes(g, xS, yS, h, xFmt, yFmt) {
@@ -1696,8 +1735,8 @@
     // ── CTX CHART 2: cobertura temporal ──────────────────────────
     function renderCoverageChart() {
       const data = D.cobertura_anual;
-      const el = document.getElementById('coverageChart'), W = svgW(el), H = 160;
-      const mg = { top: 10, right: 20, bottom: 30, left: 45 };
+      const el = document.getElementById('coverageChart'), W = svgW(el), H = 210;
+      const mg = { top: 12, right: 22, bottom: 78, left: 46 };
       const w = W - mg.left - mg.right, h = H - mg.top - mg.bottom;
       const svg = d3.select('#coverageChart').attr('width', W).attr('height', H);
       svg.selectAll('*').remove();
@@ -1706,15 +1745,73 @@
       const yS = d3.scaleLinear().domain([0, d3.max(data, d => d.countries_with_data) * 1.05]).range([h, 0]);
       const aFn = d3.area().x(d => xS(d.year)).y0(h).y1(d => yS(d.countries_with_data)).curve(d3.curveCatmullRom.alpha(.5));
       const lFn = d3.line().x(d => xS(d.year)).y(d => yS(d.countries_with_data)).curve(d3.curveCatmullRom.alpha(.5));
-      g.append('path').datum(data).attr('d', aFn).attr('fill', '#4ade80').attr('opacity', .15);
-      g.append('path').datum(data).attr('d', lFn).attr('fill', 'none').attr('stroke', '#4ade80').attr('stroke-width', 2);
-      axes(g, xS, yS, h, d3.format('d'), v => v + '');
+      const xTickYears = coverageTickValues(data, w);
+
+      g.selectAll('.coverage-grid').data(yS.ticks(4)).join('line')
+        .attr('class', 'coverage-grid')
+        .attr('x1', 0).attr('x2', w).attr('y1', d => yS(d)).attr('y2', d => yS(d))
+        .attr('stroke', '#252a38').attr('stroke-opacity', .42);
+      g.append('path').datum(data).attr('d', aFn).attr('fill', '#4ade80').attr('opacity', .14);
+      const linePath = g.append('path').datum(data).attr('d', lFn).attr('fill', 'none')
+        .attr('stroke', '#4ade80').attr('stroke-width', 2.2).attr('stroke-linecap', 'round');
+      const pathLength = linePath.node()?.getTotalLength?.() || 0;
+      linePath.attr('stroke-dasharray', `${pathLength} ${pathLength}`).attr('stroke-dashoffset', pathLength)
+        .transition().duration(550).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
+
+      const xAxis = g.append('g').attr('transform', `translate(0,${h + 12})`)
+        .call(d3.axisBottom(xS).tickValues(xTickYears).tickFormat(d3.format('d')).tickSizeOuter(0).tickSizeInner(4));
+      xAxis.call(a => {
+        a.select('.domain').attr('stroke', '#2b3143').attr('stroke-opacity', .78);
+        a.selectAll('line').attr('stroke', '#2b3143').attr('stroke-opacity', .72);
+        a.selectAll('text')
+          .attr('fill', '#9aa3b8').attr('fill-opacity', .78)
+          .attr('font-family', 'DM Mono, monospace').attr('font-size', '10px')
+          .attr('dy', '1.35em');
+      });
+      g.append('g').call(d3.axisLeft(yS).ticks(4).tickFormat(v => v + '').tickSize(0))
+        .call(a => {
+          a.select('.domain').remove();
+          a.selectAll('text')
+            .attr('fill', '#9aa3b8').attr('fill-opacity', .74)
+            .attr('font-family', 'DM Mono, monospace').attr('font-size', '10px');
+        });
+
+      const hover = g.append('g').style('display', 'none');
+      hover.append('line').attr('y1', 0).attr('y2', h).attr('stroke', '#6ee7b7').attr('stroke-opacity', .58).attr('stroke-dasharray', '3 3');
+      hover.append('circle').attr('r', 4.4).attr('fill', '#0d0f14').attr('stroke', '#6ee7b7').attr('stroke-width', 2);
+      const detail = svg.append('g').attr('transform', `translate(${mg.left},${H - 34})`);
+      detail.append('rect')
+        .attr('width', w).attr('height', 28).attr('rx', 6)
+        .attr('fill', '#141720').attr('fill-opacity', .9).attr('stroke', '#2b3143');
+      detail.append('text')
+        .attr('x', 12).attr('y', 18).attr('fill', '#9aa3b8').attr('fill-opacity', .72)
+        .attr('font-family', 'DM Mono, monospace').attr('font-size', '10px')
+        .text(W < 520 ? 'Hover: año y cobertura exacta' : 'Pasa el ratón por la serie para ver año y cobertura exacta');
+      const detailText = detail.append('text')
+        .attr('x', 12).attr('y', 18).attr('font-family', 'DM Mono, monospace').attr('font-size', '11px')
+        .style('display', 'none');
+
       g.append('rect').attr('width', w).attr('height', h).attr('fill', 'transparent')
         .on('mousemove', function (ev) {
           const yr = Math.round(xS.invert(d3.pointer(ev)[0]));
           const row = data.find(r => r.year === yr);
-          if (row) showTT(`<strong>Año ${yr}</strong><br>Países con datos: <strong>${row.countries_with_data}</strong>`, ev);
-        }).on('mouseout', hideTT);
+          if (!row) return;
+          hover.style('display', null);
+          hover.select('line').transition().duration(90).attr('x1', xS(row.year)).attr('x2', xS(row.year));
+          hover.select('circle').transition().duration(90).attr('cx', xS(row.year)).attr('cy', yS(row.countries_with_data));
+          detail.select('text').style('display', 'none');
+          detailText.style('display', null);
+          detailText.selectAll('tspan').remove();
+          detailText.append('tspan').attr('fill', '#e8eaf0').attr('font-weight', 700).text(`Año ${row.year}`);
+          detailText.append('tspan').attr('fill', '#9aa3b8').attr('fill-opacity', .82).text('  cobertura: ');
+          detailText.append('tspan').attr('fill', '#6ee7b7').attr('font-weight', 700).text(`${row.countries_with_data} países`);
+          showTT(`<strong>Cobertura temporal</strong><br>Año: <strong>${row.year}</strong><br>Países con datos: <strong>${row.countries_with_data}</strong>`, ev);
+        }).on('mouseout', () => {
+          hideTT();
+          hover.style('display', 'none');
+          detailText.style('display', 'none');
+          detail.select('text').style('display', null);
+        });
     }
 
     // ── CTX CHART 3: tabla nulos ─────────────────────────────────
@@ -2097,6 +2194,7 @@
       renderSelector();
       renderPreprocChart();
       renderCoverageChart();
+      initCoverageResizeObserver();
       renderNullTable();
       renderGlobalTrend();
       renderEurComp();
@@ -2115,7 +2213,7 @@
       const active = document.querySelector('.section.active')?.id;
       if (active === 'ctx') {
         renderPreprocChart();
-        renderCoverageChart();
+        if (!coverageResizeObserver) renderCoverageChart();
         renderGlobalTrend();
         renderEurComp();
       }
